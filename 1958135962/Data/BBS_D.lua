@@ -265,6 +265,13 @@ include "MapEnums"
 --		River bias now counts tiles instead of being a pure boolean
 --		Improved reporting
 --		Bug fixed on Tilted Axis
+-- 1.5.5
+--		Code Cleanup, less print cluter in lua.log 
+--		Luxury placement refinement
+-- 		Natural Wonder Placement Improvement (fixed Firaxis rare Volcano bug)
+--		The yield concentration phase have another step to ensure nearer tiles have priority when buffing
+--		Minor tweaks
+
 
 
 -- Code structure: Code is run right before the first turn starts
@@ -281,7 +288,7 @@ include "MapEnums"
 --	Run spawn correction Coastal (failsafe to prevent harbor blocked by reefs) 
 --	Run Choke point analysis (prevent crashes)
 
-g_version = "1.5.4"
+g_version = "1.5.5"
 
 -----------------------------------------------------------------------------
 function __Debug(...)

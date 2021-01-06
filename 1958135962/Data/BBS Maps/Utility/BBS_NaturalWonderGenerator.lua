@@ -24,6 +24,7 @@ function BBS_NaturalWonderGenerator.Create(args)
 		__InitNWData		= BBS_NaturalWonderGenerator.__InitNWData,
 		__FindValidLocs		= BBS_NaturalWonderGenerator.__FindValidLocs,
 		__PlaceWonders		= BBS_NaturalWonderGenerator.__PlaceWonders,
+		__CheckWonders		= BBS_NaturalWonderGenerator.__CheckWonders,
 		__ScorePlots		= BBS_NaturalWonderGenerator.__ScorePlots,
 
 		-- data
@@ -44,6 +45,8 @@ function BBS_NaturalWonderGenerator.Create(args)
 	instance:__FindValidLocs();
 
 	instance:__PlaceWonders();
+	
+	instance:__CheckWonders();
 
 	return instance;
 end
@@ -133,6 +136,58 @@ function BBS_NaturalWonderGenerator:__FindValidLocs()
 	-- Debug output
 	print ("Num wonders with valid location: " .. tostring(#self.aSelectedWonders));
 end
+
+------------------------------------------------------------------------------
+function BBS_NaturalWonderGenerator:__CheckWonders()
+
+	local iW, iH;
+	iW, iH = Map.GetGridSize();
+
+	local iPlotCount = Map.GetPlotCount();
+	for i = 0, iPlotCount - 1 do
+		local pPlot = Map.GetPlotByIndex(i);
+		if pPlot:IsNaturalWonder() == true then
+			local CheckedWonder = pPlot:GetFeatureType()
+			local CheckedWonder_Name = tostring(GameInfo.Features[CheckedWonder].Name)
+			--print ("Feature Type: ",CheckedWonder_Name,"X:",pPlot:GetX(),"Y;",pPlot:GetY(),MapFeatureManager.IsVolcano(pPlot))
+			if MapFeatureManager.IsVolcano(pPlot) == true and (CheckedWonder_Name ~= "LOC_FEATURE_VESUVIUS_NAME" and CheckedWonder_Name ~= "LOC_FEATURE_EYJAFJALLAJOKULL_NAME" and CheckedWonder_Name ~= "LOC_FEATURE_KRAKATOA_NAME") then
+				print ("Volcano Detected: Remove")				
+				TerrainBuilder.SetFeatureType(pPlot,-1)
+				TerrainBuilder.SetFeatureType(pPlot,g_FEATURE_VOLCANO)
+				TerrainBuilder.SetTerrainType(pPlot, BBS_ConvertToMountain(pPlot:GetTerrainType()))
+			else
+			for dx = -3, 3 do
+				for dy = -3,3 do
+					local otherPlot = Map.GetPlotXY(plotX, plotY, dx, dy, 3);
+					if(otherPlot) then
+						if(otherPlot:IsNaturalWonder() == true and otherPlot:GetFeatureType() ~= CheckedWonder) then
+							print ("Clumped Wonder Detected: ",tostring(GameInfo.Features[otherPlot:GetFeatureType()].Name),"X:",otherPlot:GetX(),"Y;",otherPlot:GetY())
+							TerrainBuilder.SetFeatureType(otherPlot,-1)
+						end
+					end
+				end
+			end			
+			end
+		end
+	end
+
+	for iI = 0, self.iNumWondersInDB - 1 do
+		local iNumEntries = #self.aaPossibleLocs[iI];
+		print ("Feature Type: " .. tostring(self.eFeatureType[iI]) .. ", Valid Hexes: " .. tostring(iNumEntries));
+		if (iNumEntries > 0) then
+			selectionRow = {}
+			selectionRow.NWIndex = iI;
+			selectionRow.RandomScore = TerrainBuilder.GetRandomNumber (100, "Natural Wonder Selection Roll");
+			table.insert (self.aSelectedWonders, selectionRow);
+		end
+	end
+	table.sort(self.aSelectedWonders, function(a, b) return a.RandomScore > b.RandomScore; end);
+
+	-- Debug output
+	print ("Num wonders with valid location: " .. tostring(#self.aSelectedWonders));
+end
+
+
 ------------------------------------------------------------------------------
 function BBS_NaturalWonderGenerator:__PlaceWonders()
 	local j = 1;
@@ -604,4 +659,23 @@ function SetNaturalCliff(iPlot)
 			end
 		end
 	end
+end
+
+function BBS_ConvertToMountain(type)
+
+	local rtnValue = type;
+
+	if (type == g_TERRAIN_TYPE_SNOW or type == g_TERRAIN_TYPE_SNOW_HILLS) then
+		rtnValue = g_TERRAIN_TYPE_SNOW_MOUNTAIN;
+	elseif (type == g_TERRAIN_TYPE_TUNDRA or type == g_TERRAIN_TYPE_TUNDRA_HILLS) then
+		rtnValue = g_TERRAIN_TYPE_TUNDRA_MOUNTAIN;
+	elseif (type == g_TERRAIN_TYPE_DESERT or type == g_TERRAIN_TYPE_DESERT_HILLS) then
+		rtnValue = g_TERRAIN_TYPE_DESERT_MOUNTAIN;
+	elseif (type == g_TERRAIN_TYPE_GRASS or type == g_TERRAIN_TYPE_GRASS_HILLS) then
+		rtnValue = g_TERRAIN_TYPE_GRASS_MOUNTAIN;
+	elseif (type == g_TERRAIN_TYPE_PLAINS or type == g_TERRAIN_TYPE_PLAINS_HILLS) then
+		rtnValue = g_TERRAIN_TYPE_PLAINS_MOUNTAIN;
+	end
+
+	return rtnValue;
 end

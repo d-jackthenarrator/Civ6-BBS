@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	 BBS_Balance.lua 1.5.4
+--	FILE:	 BBS_Balance.lua 1.5.5
 --	AUTHOR:  D. / Jack The Narrator, 57Fan
 --	PURPOSE: Rebalance the map spawn post placement 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -265,7 +265,10 @@ function BBS_Script()
 
 		-- Firaxis Defaults from SetDefaultAssignedStartingPlots.lua
 		local bTerraformingSpawn = true;
-
+		if GameConfiguration.GetValue("SpawnTerraforming") ~= nil then
+			bTerraformingSpawn = GameConfiguration.GetValue("SpawnTerraforming");
+		end
+		__Debug("SpawnTerraforming",bTerraformingSpawn)
    		--Find Default Number
     		local MapSizeTypes = {};
     		for row in GameInfo.Maps() do
@@ -1253,121 +1256,53 @@ function BBS_Script()
 		local iStartEra = GameInfo.Eras[ GameConfiguration.GetStartEra() ];
 		local iStartIndex = 1;
 
-
+		local data = {}
 		if iStartEra ~= nil then
 			iStartIndex = iStartEra.ChronologyIndex;
 		end
 
 		if (iStartIndex == 1 or iStartIndex == 2) then
 
-		-- Let's get the averages
-		local avg_best_ring_1 = 0;
-		local avg_best_ring_2 = 0;
-		local max_best_tile_1 = 0;
-		local max_best_tile_2 = 0;
-		local max_best_tile_3 = 0;
-		local max_best_tile_4 = 0;
+		data = Terraforming_Best_Refresh(majList,major_count,"First Pass",bHighRoll)
+		-- Pre Pass
+		if data ~= nil then
+			local max_best_tile_1 = data[1]
+			local max_best_tile_2 = data[2]
+			local max_best_tile_3 = data[3]
+			local max_best_tile_4 = data[4]
+			local avg_best_ring_1 = data[5]
+			local avg_best_ring_2 = data[6]
 		
-		local best_civ_1 = nil
-		local best_civ_2 = nil
-		local best_civ_3 = nil
-		local best_civ_4 = nil
-		local maori_sea = 5
-		local tundra_buff = 1.5
-		local desert_buff = 2.5
-		if bHighRoll == true then
-			maori_sea = 6
-			tundra_buff = 2.25
-			desert_buff = 3		
-		end
-		
-		count = 0;
-		for i = 1, major_count do
-			if (majList[i] == nil or majList[i].leader == "LEADER_SPECTATOR"  ) then
-			
-				count = count +1;
-				
-				else
-				startPlot = Map.GetPlot(majList[i].plotX, majList[i].plotY);
-				tempEval = EvaluateStartingLocation(startPlot)
-				--	Ring 1
-				majList[i].best_tile = tempEval[24];
-				majList[i].best_tile_2 = tempEval[25];
-				majList[i].best_tile_3 = tempEval[36];
-				-- Ring 2
-				majList[i].best_tile_inner = tempEval[28]; 
-				majList[i].best_tile_inner_2 = tempEval[29];
-				majList[i].tundra_start = tempEval[11];
-				if (majList[i].civ == "CIVILIZATION_RUSSIA" or majList[i].civ == "CIVILIZATION_CANADA" ) and tempEval[11] > 4 then
-				-- Russia/Canada on Tundra
-				--	Ring 1
-				majList[i].best_tile = tempEval[24]+tundra_buff;
-				majList[i].best_tile_2 = tempEval[25]+tundra_buff;
-				majList[i].best_tile_3 = tempEval[36]+tundra_buff;
-				-- Ring 2
-				majList[i].best_tile_inner = tempEval[28]+tundra_buff; 
-				majList[i].best_tile_inner_2 = tempEval[29]+tundra_buff;
+			for i = 1, major_count do
+			if (majList[i] ~= nil) then
+				if(majList[i].leader ~= "LEADER_SPECTATOR") then	
+					local immediate_raw = (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].isBase22)
+					local missing_amount =  13 - immediate_raw;
+					if (immediate_raw < 13) then
+					
+						__Debug("Tile balancing: Need to adjust: ", majList[i].leader, "Raw Immediate:",immediate_raw, "Weak",missing_amount)	
+						Terraforming_Best(Map.GetPlot(majList[i].plotX,majList[i].plotY), missing_amount, max_best_tile_1, max_best_tile_2, avg_best_ring_1 ,avg_best_ring_2, majList[i].best_tile, majList[i].bestTiles1Ring1_index, majList[i].best_tile_2, majList[i].bestTiles1Ring2_index,majList[i].best_tile_3,majList[i].bestTiles1Ring3_index,majList[i].best_tile_inner,majList[i].bestTiles2Ring1_index,majList[i].best_tile_inner_2,majList[i].bestTiles2Ring2_index, 1, bHighRoll,true);
+						else
+						__Debug("Tile balancing: Need to adjust: ", majList[i].leader, "Raw Immediate:",immediate_raw, "Acceptable",majList[i].best_tile,majList[i].best_tile_inner)	
+					end
 				end
-				majList[i].desert_start = tempEval[12];
-				if (majList[i].civ == "CIVILIZATION_MALI" ) and tempEval[12] > 4 then
-				-- Mali on Desert
-				--	Ring 1
-				majList[i].best_tile = tempEval[24]+desert_buff;
-				majList[i].best_tile_2 = tempEval[25]+desert_buff;
-				majList[i].best_tile_3 = tempEval[36]+desert_buff;
-				-- Ring 2
-				majList[i].best_tile_inner = tempEval[28]+desert_buff; 
-				majList[i].best_tile_inner_2 = tempEval[29]+desert_buff;
-				end				
-				if (majList[i].civ == "CIVILIZATION_MAORI" ) and tempEval[14] > 4 then
-				-- Maori if on water
-				--	Ring 1 like a 2:2
-				majList[i].best_tile = maori_sea;
-				majList[i].best_tile_2 = maori_sea;
-				majList[i].best_tile_3 = maori_sea;
-				-- Ring 2
-				majList[i].best_tile_inner = maori_sea; 
-				majList[i].best_tile_inner_2 = maori_sea;
-				end
-				__Debug(majList[i].civ ,"S1-S2-S3-I1-I2:", majList[i].best_tile,"(",majList[i].bestTiles1Ring1_index,")",majList[i].best_tile_2,"(",majList[i].bestTiles1Ring2_index,")",majList[i].best_tile_3,"(",majList[i].bestTiles1Ring3_index,")",majList[i].best_tile_inner,"(",majList[i].bestTiles2Ring1_index,")",majList[i].best_tile_inner_2,"(",majList[i].bestTiles2Ring2_index,") - 2:2 Base?",majList[i].isBase22)
-				-- Best yield first ring
-				if majList[i].best_tile > max_best_tile_1 then
-					max_best_tile_1 = majList[i].best_tile
-					best_civ_1 = majList[i].leader
-				end
-				-- Best yield second ring
-				if majList[i].best_tile_inner > max_best_tile_2 then
-					max_best_tile_2 = majList[i].best_tile_inner
-					best_civ_2 = majList[i].leader
-				end
-				-- Best 5 tiles and Base
-				if (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner + majList[i].best_tile_inner_2 + majList[i].isBase22) > max_best_tile_3 then
-					max_best_tile_3 = (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner + majList[i].best_tile_inner_2 + majList[i].isBase22)
-					best_civ_3 = majList[i].leader
-				end
-				-- Best Score
-				if (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner*0.9 + majList[i].best_tile_inner_2*0.9 + majList[i].isBase22) > max_best_tile_4 then
-					max_best_tile_4 = (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner*0.9 + majList[i].best_tile_inner_2*0.9 + majList[i].isBase22)
-					best_civ_4 = majList[i].leader
-				end
-				avg_best_ring_1  = avg_best_ring_1 + majList[i].best_tile  + majList[i].best_tile_2  + majList[i].best_tile_3 + majList[i].isBase22 ;
-				avg_best_ring_2  = avg_best_ring_2 + majList[i].best_tile_inner  + majList[i].best_tile_inner_2 ;
 			end
-
+			end		
 		end
-
-		avg_best_ring_1  = avg_best_ring_1  / (major_count - count);
-		avg_best_ring_2 = avg_best_ring_2 / (major_count - count);
-
-		__Debug("Phase 4: Best Tiles Balancing: Average Ring 1:", avg_best_ring_1 ,"Average Ring 2:", avg_best_ring_2);
-		__Debug("Best Ring 1 Tile:", max_best_tile_1,best_civ_1);
-		__Debug("Best Ring 2 Tile:", max_best_tile_2,best_civ_2);
-		__Debug("Best Raw Yields:", max_best_tile_3,best_civ_3);
-		__Debug("Best Overall Score:", max_best_tile_4,best_civ_4);
+		
+		data = Terraforming_Best_Refresh(majList,major_count,"Second Pass",bHighRoll)
+		-- Pre Pass
+		if data ~= nil then
+			local max_best_tile_1 = data[1]
+			local max_best_tile_2 = data[2]
+			local max_best_tile_3 = data[3]
+			local max_best_tile_4 = data[4]
+			local avg_best_ring_1 = data[5]
+			local avg_best_ring_2 = data[6]
 		
 		-- High Roll a.k.a. Coloo's Greed
 		if bHighRoll == true then
-		for i = 1, major_count do
+			for i = 1, major_count do
 			if (majList[i] ~= nil) then
 				if(majList[i].leader ~= "LEADER_SPECTATOR") then
 					if  majList[i].isBase22 > 1 then
@@ -1385,106 +1320,21 @@ function BBS_Script()
 					end
 				end
 			end
-		end
-		
-		
-		-- Let's get the averages
-		local maori_sea = 5
-		local tundra_buff = 1.5
-		local desert_buff = 2.5
-		if bHighRoll == true then
-			maori_sea = 6
-			tundra_buff = 2.25
-			desert_buff = 2.25		
-		end
-		
-		count = 0;
-		for i = 1, major_count do
-			if (majList[i] == nil or majList[i].leader == "LEADER_SPECTATOR"  ) then
-			
-				count = count +1;
-				
-				else
-				startPlot = Map.GetPlot(majList[i].plotX, majList[i].plotY);
-				tempEval = EvaluateStartingLocation(startPlot)
-				--	Ring 1
-				majList[i].best_tile = tempEval[24];
-				majList[i].best_tile_2 = tempEval[25];
-				majList[i].best_tile_3 = tempEval[36];
-				-- Ring 2
-				majList[i].best_tile_inner = tempEval[28]; 
-				majList[i].best_tile_inner_2 = tempEval[29];
-				if (majList[i].civ == "CIVILIZATION_RUSSIA" or majList[i].civ == "CIVILIZATION_CANADA" ) and tempEval[11] > 4 then
-				-- Russia/Canada on Tundra
-				--	Ring 1
-				majList[i].best_tile = tempEval[24]+tundra_buff;
-				majList[i].best_tile_2 = tempEval[25]+tundra_buff;
-				majList[i].best_tile_3 = tempEval[36]+tundra_buff;
-				-- Ring 2
-				majList[i].best_tile_inner = tempEval[28]+tundra_buff; 
-				majList[i].best_tile_inner_2 = tempEval[29]+tundra_buff;
-				end
-				if (majList[i].civ == "CIVILIZATION_MALI" ) and tempEval[12] > 4 then
-				-- Mali on Desert
-				--	Ring 1
-				majList[i].best_tile = tempEval[24]+desert_buff;
-				majList[i].best_tile_2 = tempEval[25]+desert_buff;
-				majList[i].best_tile_3 = tempEval[36]+desert_buff;
-				-- Ring 2
-				majList[i].best_tile_inner = tempEval[28]+desert_buff; 
-				majList[i].best_tile_inner_2 = tempEval[29]+desert_buff;
-				end				
-				if (majList[i].civ == "CIVILIZATION_MAORI" ) and tempEval[14] > 4 then
-				-- Maori if on water
-				--	Ring 1 like a 2:2
-				majList[i].best_tile = maori_sea;
-				majList[i].best_tile_2 = maori_sea;
-				majList[i].best_tile_3 = maori_sea;
-				-- Ring 2
-				majList[i].best_tile_inner = maori_sea; 
-				majList[i].best_tile_inner_2 = maori_sea;
-				end
-				__Debug(majList[i].civ ,"S1-S2-S3-I1-I2:", majList[i].best_tile,"(",majList[i].bestTiles1Ring1_index,")",majList[i].best_tile_2,"(",majList[i].bestTiles1Ring2_index,")",majList[i].best_tile_3,"(",majList[i].bestTiles1Ring3_index,")",majList[i].best_tile_inner,"(",majList[i].bestTiles2Ring1_index,")",majList[i].best_tile_inner_2,"(",majList[i].bestTiles2Ring2_index,") - 2:2 Base?",majList[i].isBase22)
-				-- Best yield first ring
-				if majList[i].best_tile > max_best_tile_1 then
-					max_best_tile_1 = majList[i].best_tile
-					best_civ_1 = majList[i].leader
-				end
-				-- Best yield second ring
-				if majList[i].best_tile_inner > max_best_tile_2 then
-					max_best_tile_2 = majList[i].best_tile_inner
-					best_civ_2 = majList[i].leader
-				end
-				-- Best 5 tiles and Base
-				if (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner + majList[i].best_tile_inner_2 + majList[i].isBase22) > max_best_tile_3 then
-					max_best_tile_3 = (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner + majList[i].best_tile_inner_2 + majList[i].isBase22)
-					best_civ_3 = majList[i].leader
-				end
-				-- Best Score
-				if (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner*0.9 + majList[i].best_tile_inner_2*0.9 + majList[i].isBase22) > max_best_tile_4 then
-					max_best_tile_4 = (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner*0.9 + majList[i].best_tile_inner_2*0.9 + majList[i].isBase22)
-					best_civ_4 = majList[i].leader
-				end
-				avg_best_ring_1  = avg_best_ring_1 + majList[i].best_tile  + majList[i].best_tile_2  + majList[i].best_tile_3 + majList[i].isBase22 ;
-				avg_best_ring_2  = avg_best_ring_2 + majList[i].best_tile_inner  + majList[i].best_tile_inner_2 ;
 			end
-
-		end
-
-		avg_best_ring_1  = avg_best_ring_1  / (major_count - count);
-		avg_best_ring_2 = avg_best_ring_2 / (major_count - count);
-
-		__Debug("Phase 4b: Best Tiles Balancing Post High Roll: Average Ring 1:", avg_best_ring_1 ,"Average Ring 2:", avg_best_ring_2);
-		__Debug("Best Ring 1 Tile:", max_best_tile_1,best_civ_1);
-		__Debug("Best Ring 2 Tile:", max_best_tile_2,best_civ_2);
-		__Debug("Best Raw Yields:", max_best_tile_3,best_civ_3);
-		__Debug("Best Overall Score:", max_best_tile_4,best_civ_4);		
 		
 		end
+			
+		end
 		
-		
-
-		for i = 1, major_count do
+		data = Terraforming_Best_Refresh(majList,major_count,"Third Pass",bHighRoll)
+		if data ~= nil then
+			local max_best_tile_1 = data[1]
+			local max_best_tile_2 = data[2]
+			local max_best_tile_3 = data[3]
+			local max_best_tile_4 = data[4]
+			local avg_best_ring_1 = data[5]
+			local avg_best_ring_2 = data[6]
+			for i = 1, major_count do
 			if (majList[i] ~= nil) then
 				if(majList[i].leader ~= "LEADER_SPECTATOR") then
 					if majList[i].best_tile > 5.75 and majList[i].isBase22 > 1 then
@@ -1520,6 +1370,7 @@ function BBS_Script()
 
 					end
 				end
+			end
 			end
 		end
 
@@ -3223,6 +3074,130 @@ function Terraforming_Polar_Start(plot)
 end
 
 ------------------------------------------------------------------------------
+
+function Terraforming_Best_Refresh(majList,major_count,step,bHighRoll)
+		if majList == nil then
+			__Debug("Terraforming_Best_Refresh: Missing Table")
+			return
+		end
+		if major_count == nil then
+			__Debug("Terraforming_Best_Refresh: Missing Upper Bound")
+			return
+		end
+		local output = {}
+		-- Let's get the averages
+		local avg_best_ring_1 = 0;
+		local avg_best_ring_2 = 0;
+		local max_best_tile_1 = 0;
+		local max_best_tile_2 = 0;
+		local max_best_tile_3 = 0;
+		local max_best_tile_4 = 0;
+		local	maori_sea = 6
+		local	tundra_buff = 2.25
+		local	desert_buff = 3		
+		
+		local best_civ_1 = nil
+		local best_civ_2 = nil
+		local best_civ_3 = nil
+		local best_civ_4 = nil
+		local maori_sea = 5
+		local tundra_buff = 1.5
+		local desert_buff = 2.5
+		if bHighRoll == true then
+			maori_sea = 6
+			tundra_buff = 2.25
+			desert_buff = 3		
+		end
+		
+		count = 0;
+		for i = 1, major_count do
+			if (majList[i] == nil or majList[i].leader == "LEADER_SPECTATOR"  ) then
+			
+				count = count +1;
+				
+				else
+				local startPlot = Map.GetPlot(majList[i].plotX, majList[i].plotY);
+				local tempEval = EvaluateStartingLocation(startPlot)
+				--	Ring 1
+				majList[i].best_tile = tempEval[24];
+				majList[i].best_tile_2 = tempEval[25];
+				majList[i].best_tile_3 = tempEval[36];
+				-- Ring 2
+				majList[i].best_tile_inner = tempEval[28]; 
+				majList[i].best_tile_inner_2 = tempEval[29];
+				majList[i].tundra_start = tempEval[11];
+				if (majList[i].civ == "CIVILIZATION_RUSSIA" or majList[i].civ == "CIVILIZATION_CANADA" ) and tempEval[11] > 4 then
+				-- Russia/Canada on Tundra
+				--	Ring 1
+				majList[i].best_tile = tempEval[24]+tundra_buff;
+				majList[i].best_tile_2 = tempEval[25]+tundra_buff;
+				majList[i].best_tile_3 = tempEval[36]+tundra_buff;
+				-- Ring 2
+				majList[i].best_tile_inner = tempEval[28]+tundra_buff; 
+				majList[i].best_tile_inner_2 = tempEval[29]+tundra_buff;
+				end
+				majList[i].desert_start = tempEval[12];
+				if (majList[i].civ == "CIVILIZATION_MALI" ) and tempEval[12] > 4 then
+				-- Mali on Desert
+				--	Ring 1
+				majList[i].best_tile = tempEval[24]+desert_buff;
+				majList[i].best_tile_2 = tempEval[25]+desert_buff;
+				majList[i].best_tile_3 = tempEval[36]+desert_buff;
+				-- Ring 2
+				majList[i].best_tile_inner = tempEval[28]+desert_buff; 
+				majList[i].best_tile_inner_2 = tempEval[29]+desert_buff;
+				end				
+				if (majList[i].civ == "CIVILIZATION_MAORI" ) and tempEval[14] > 4 then
+				-- Maori if on water
+				--	Ring 1 like a 2:2
+				majList[i].best_tile = maori_sea;
+				majList[i].best_tile_2 = maori_sea;
+				majList[i].best_tile_3 = maori_sea;
+				-- Ring 2
+				majList[i].best_tile_inner = maori_sea; 
+				majList[i].best_tile_inner_2 = maori_sea;
+				end
+				__Debug(majList[i].civ ,"S1-S2-S3-I1-I2:", majList[i].best_tile,"(",majList[i].bestTiles1Ring1_index,")",majList[i].best_tile_2,"(",majList[i].bestTiles1Ring2_index,")",majList[i].best_tile_3,"(",majList[i].bestTiles1Ring3_index,")",majList[i].best_tile_inner,"(",majList[i].bestTiles2Ring1_index,")",majList[i].best_tile_inner_2,"(",majList[i].bestTiles2Ring2_index,") - 2:2 Base?",majList[i].isBase22)
+				-- Best yield first ring
+				if majList[i].best_tile > max_best_tile_1 then
+					max_best_tile_1 = majList[i].best_tile
+					best_civ_1 = majList[i].leader
+				end
+				-- Best yield second ring
+				if majList[i].best_tile_inner > max_best_tile_2 then
+					max_best_tile_2 = majList[i].best_tile_inner
+					best_civ_2 = majList[i].leader
+				end
+				-- Best 5 tiles and Base
+				if (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner + majList[i].best_tile_inner_2 + majList[i].isBase22) > max_best_tile_3 then
+					max_best_tile_3 = (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner + majList[i].best_tile_inner_2 + majList[i].isBase22)
+					best_civ_3 = majList[i].leader
+				end
+				-- Best Score
+				if (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner*0.9 + majList[i].best_tile_inner_2*0.9 + majList[i].isBase22) > max_best_tile_4 then
+					max_best_tile_4 = (majList[i].best_tile + majList[i].best_tile_2 + majList[i].best_tile_3 + majList[i].best_tile_inner*0.9 + majList[i].best_tile_inner_2*0.9 + majList[i].isBase22)
+					best_civ_4 = majList[i].leader
+				end
+				avg_best_ring_1  = avg_best_ring_1 + majList[i].best_tile  + majList[i].best_tile_2  + majList[i].best_tile_3 + majList[i].isBase22 ;
+				avg_best_ring_2  = avg_best_ring_2 + majList[i].best_tile_inner  + majList[i].best_tile_inner_2 ;
+			end
+
+		end
+
+		avg_best_ring_1  = avg_best_ring_1  / (major_count - count);
+		avg_best_ring_2 = avg_best_ring_2 / (major_count - count);
+
+		__Debug("Phase 4",step,": Average Ring 1:", avg_best_ring_1 ,"Average Ring 2:", avg_best_ring_2);
+		__Debug("Best Ring 1 Tile:", max_best_tile_1,best_civ_1);
+		__Debug("Best Ring 2 Tile:", max_best_tile_2,best_civ_2);
+		__Debug("Best Raw Yields:", max_best_tile_3,best_civ_3);
+		__Debug("Best Overall Score:", max_best_tile_4,best_civ_4);
+		output = { max_best_tile_1,max_best_tile_2,max_best_tile_3,max_best_tile_4,avg_best_ring_1,avg_best_ring_2}
+		return output
+
+end
+
+
 
 ------------------------------------------------------------------------------
 
@@ -8284,18 +8259,22 @@ function AddLuxuryStarting(plot, s_type)
 		
 	end
 
+	local lower_bound = 0
+	local upper_bound = 17
 	-- Try placing a Luxury in the 2 inner rings
 
 	if(bHasLuxury == true) then
-		for i = 0, 17, 1 do
+		for i = lower_bound, upper_bound, 1 do
 			adjacentPlot = GetAdjacentTiles(plot, i);
 			if (adjacentPlot ~= nil) then
 				for j = 1, count do
 					if((adjacentPlot:GetTerrainType() == eAddLux_Terrain[j]) and (adjacentPlot:GetResourceType() == -1)) and adjacentPlot:IsNaturalWonder() == false and pPlot:IsWater() == false  then
-						TerrainBuilder.SetFeatureType(adjacentPlot,eAddLux_Feature[j]);
-						__Debug("Balancing X: ", adjacentPlot:GetX(), "Y: ", adjacentPlot:GetY(), "Added a Luxury:",eAddLux[j]);
-						ResourceBuilder.SetResourceType(adjacentPlot, eAddLux[j], 1);
-						return true;
+						if (i > 5 and (eAddLux[j] == 17 or eAddLux[j] == 19)) or (eAddLux[j] ~= 17 and eAddLux[j] ~= 19) then
+							TerrainBuilder.SetFeatureType(adjacentPlot,eAddLux_Feature[j]);
+							__Debug("Balancing X: ", adjacentPlot:GetX(), "Y: ", adjacentPlot:GetY(), "Added a Luxury:",eAddLux[j]);
+							ResourceBuilder.SetResourceType(adjacentPlot, eAddLux[j], 1);
+							return true;
+						end
 					end
 				end
 			end
