@@ -828,6 +828,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
         local ratedPlot = {};
         local foundBiasDesert = false;
         local foundBiasToundra = false;
+		local foundBiasNordic = false;
 		local foundBiasFloodPlains = false;
 		local foundBiasCoast = false;
         ratedPlot.Plot = plot;
@@ -959,6 +960,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 					__Debug("Custom Mountain Lover", ratedPlot.Score,Mountain_plains,Mountain_grass,impassable);
 					
 				elseif (bias.Type == "CUSTOM_KING_OF_THE_NORTH") then	
+					foundBiasNordic = true;
 					if MapConfiguration.GetValue("MAP_SCRIPT") ~= "Tilted_Axis.lua"  then
 						local max = 0;
 						local min = 0;
@@ -977,11 +979,11 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 						end	
 
 						if(plot:GetY() <= min or plot:GetY() > gridHeight - max) then
-							ratedPlot.Score = ratedPlot.Score + 1250;
+							ratedPlot.Score = ratedPlot.Score + 500;
 							elseif(plot:GetY() <= min + 1 or plot:GetY() > gridHeight - max - 1) then 
-							ratedPlot.Score = ratedPlot.Score + 700;
+							ratedPlot.Score = ratedPlot.Score + 200;
 							elseif(plot:GetY() <= min + 2 or plot:GetY() > gridHeight - max - 2) then 
-							ratedPlot.Score = ratedPlot.Score + 250;
+							ratedPlot.Score = ratedPlot.Score + 100;
 							else
 							ratedPlot.Score = ratedPlot.Score - 100;
 						end	
@@ -1015,7 +1017,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 						for dx = -2, 2, 1 do
 							for dy = -2, 2, 1 do
 								local adjacentPlot = Map.GetPlotXYWithRangeCheck(plot:GetX(), plot:GetY(), dx, dy, 3);
-								if(adjacentPlot ~= nil and adjacentPlot:IsCoastalLand() == true) then
+								if( adjacentPlot ~= nil and adjacentPlot:IsCoastalLand() == true and ( (adjacentPlot:IsLake() == false) or (MapConfiguration.GetValue("MAP_SCRIPT") == "Lakes.lua")) ) then
 									close_to_coast = true
 								end
 							end
@@ -1025,15 +1027,21 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 							else
 							ratedPlot.Score = ratedPlot.Score - 2500;
 						end
-						if plot:IsCoastalLand() == false then
-							ratedPlot.Score = ratedPlot.Score - 1000;
-							else
+						if plot:IsCoastalLand() == true and plot:IsLake() == false and MapConfiguration.GetValue("MAP_SCRIPT") ~= "Lakes.lua" then
 							ratedPlot.Score = ratedPlot.Score + 1250;
+							elseif plot:IsCoastalLand() == true and plot:IsLake() == true and MapConfiguration.GetValue("MAP_SCRIPT") ~= "Lakes.lua" then
+							ratedPlot.Score = ratedPlot.Score - 50;
+							elseif plot:IsCoastalLand() == true then
+							ratedPlot.Score = ratedPlot.Score + 250;
+							else
+							ratedPlot.Score = ratedPlot.Score - 1000;
 						end
 						__Debug("Coastal", ratedPlot.Score);
                 end
             end
         end
+
+
         if (major) then
 			if self.uiStartConfig ~= 3 then
 				-- Try to spawn close to 1 luxury
@@ -1064,15 +1072,22 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 				__Debug("Flood Check", ratedPlot.Score);	
 			end
 			
-			
+
             if (not foundBiasToundra) then
-                local tempTundra = self:__CountAdjacentTerrainsInRange(ratedPlot.Plot, g_TERRAIN_TYPE_TUNDRA, false);
-                local tempTundraHill = self:__CountAdjacentTerrainsInRange(ratedPlot.Plot, g_TERRAIN_TYPE_TUNDRA_HILLS, false);
+				local tempTundra = self:__CountAdjacentTerrainsInRange(ratedPlot.Plot, g_TERRAIN_TYPE_TUNDRA, false);
+				local tempTundraHill = self:__CountAdjacentTerrainsInRange(ratedPlot.Plot, g_TERRAIN_TYPE_TUNDRA_HILLS, false);	
                 if (tempTundra > 0 or tempTundraHill > 0) then
                     --__Debug("No Toundra Bias found, reduce adjacent Toundra and Snow Terrain for Plot :", ratedPlot.Plot:GetX(), ratedPlot.Plot:GetY());
                     ratedPlot.Score = ratedPlot.Score - (tempTundra + tempTundraHill) * 100;
                 end
 				else
+				if (ratedPlot.Plot:GetTerrainType() == g_TERRAIN_TYPE_TUNDRA or ratedPlot.Plot:GetTerrainType() == g_TERRAIN_TYPE_TUNDRA_HILLS) then
+					ratedPlot.Score = ratedPlot.Score + 250;
+					else
+					ratedPlot.Score = ratedPlot.Score - 250;
+				end
+				
+				
 				if ratedPlot.Plot:GetIndex() > Map.GetPlotCount() / 2 then
 							--__Debug("Rate Plot:", plot:GetX(), ":", plot:GetY(), "Polarity Bias b_north_biased",b_north_biased,"We are North");
 					if b_north_biased == true then
@@ -1089,7 +1104,8 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 					end
 				end
             end
-			__Debug("tundra Check", ratedPlot.Score);	
+
+			__Debug("tundra Check", ratedPlot.Score,tempTundra,tempTundraHill,ratedPlot.Plot:GetX(),ratedPlot.Plot:GetY());	
 			-- Placement
 			if MapConfiguration.GetValue("MAP_SCRIPT") ~= "Tilted_Axis.lua"  then
 			    local max = 0;
@@ -1108,7 +1124,11 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 					min = 8
 				end	
 
-
+				if foundBiasNordic == true then
+					max = 6
+					min = 6
+				end
+				
 				if(plot:GetY() <= min or plot:GetY() > gridHeight - max) then
 					ratedPlot.Score = ratedPlot.Score - 2000
 					elseif(plot:GetY() <= min + 1 or plot:GetY() > gridHeight - max - 1) then 
@@ -1222,7 +1242,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 			ratedPlot.Score = ratedPlot.Score - 250;
 		end
         ratedPlot.Score = ratedPlot.Score + self:__CountAdjacentYieldsInRange(plot, major);
-
+		
 		if (plot:IsFreshWater() == false and foundBiasCoast == false) then
 			ratedPlot.Score = ratedPlot.Score - 500;
 		end
@@ -1231,11 +1251,13 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 			ratedPlot.Score = ratedPlot.Score + 25
 		end
 		__Debug("River Check", ratedPlot.Score);	
+
 		if Players[iPlayer] ~= nil then
 			if self:__MajorMajorCivBufferCheck(plot,Players[iPlayer]:GetTeam()) == false then
 				ratedPlot.Score = ratedPlot.Score - 2000;
 			end
 		end
+		
 		__Debug("Buffer Check", ratedPlot.Score);	
 		ratedPlot.Score = math.floor(ratedPlot.Score);
         __Debug("Plot :", plot:GetX(), ":", plot:GetY(), "Score :", ratedPlot.Score, "North Biased:",b_north_biased, "Type:",plot:GetTerrainType());
@@ -1463,7 +1485,7 @@ function BBS_AssignStartingPlots:__ScoreAdjacent(count, tier, bias_type)
 	end
 	if bias_type == "TERRAINS" or bias_type == "NEGATIVE_TERRAINS" then
 		if count ~= nil and tier ~= nil and tier ~= 0 then
-			score = math.min(50 * count ^ (3/tier),750);
+			score = math.min(50 * count ^ (4/tier),750);
 		end
 		return score;
 	end
