@@ -157,7 +157,7 @@ function BBS_Script()
 		end
 		print ("Init: Rainfall: ", rainfall, "1 = Dry, 2 = Standard, 3 = Humid");
 		print ("Init: World Age: ", world_age, "1 = New, 2 = Standard 3 = Old");
-		print ("Init: Ridge: ", ridge, "1 = Standard 2 = Large Open 4 = Flat Earth");
+		print ("Init: Ridge: ", ridge, "0 = Standard, 1 = Classic, 2 = Large Open 4 = Flat Earth");
 		print ("Init: Sea Level: ", sea_level, "1 = Low Sea Level, 2 = Standard, 3 = High Sea Level");
 		print("Init: Strategic Resources:",MapConfiguration.GetValue("BBSStratRes"))
 		local resourcesConfig = MapConfiguration.GetValue("resources");
@@ -427,8 +427,16 @@ function BBS_Script()
         print("---");
 
         for i = 1, major_count do
-            print("Player ID:", major_table[i], " Team:", Players[major_table[i]]:GetTeam(), majList[i].civ, majList[i].leader);
-        end
+			if major_table[i] ~= nil then
+				if Players[major_table[i]] ~= nil then
+					print("Player ID:", major_table[i], " Team:", Players[major_table[i]]:GetTeam(), majList[i].civ, majList[i].leader);
+					else
+					print("Error:",i,major_table[i],"Missing Player")
+				end
+				else
+				print("Error:",i,major_table[i],"Missing Player")
+			end
+	   end
 
 
         print("---");
@@ -534,7 +542,327 @@ function BBS_Script()
 			__Debug("Terraforming: Terrain Update Not Required (Use Original Civ 6 Map)");
 		end
       
-      ---- BEGIN Coastal work -------
+  
+      
+
+		-- Fix Natural Wonders mountains problem
+		-- Will Handle in 1.4.7 from Database
+		--for iPlotIndex = 0, Map.GetPlotCount()-1 do
+		--	local natPlot = Map.GetPlotByIndex(iPlotIndex)
+		--	if (natPlot ~= nil) then
+		--		if (natPlot:IsNaturalWonder() == true and natPlot:GetFeatureType() ~= 29) then
+		--			for i = 0, 5 do
+		--				local adjacentPlot = GetAdjacentTiles(natPlot, i);
+		--				if (adjacentPlot ~= nil) then
+		--					if (adjacentPlot:IsImpassable() == true and adjacentPlot:GetFeatureType() ~= g_FEATURE_VOLCANO and adjacentPlot:IsNaturalWonder() == false) then
+		--						TerrainBuilder.SetTerrainType(adjacentPlot,adjacentPlot:GetTerrainType()-1);
+		--						if ( adjacentPlot:GetFeatureType() == g_FEATURE_VOLCANO) then
+		--							TerrainBuilder.SetFeatureType(adjacentPlot,-1);
+		--						end	
+		--					end
+		--				end
+		--			end
+		--		end
+		--	end
+		--end
+
+		-- Fix extreme Mountains Start
+		for i = 1, major_count do
+			-- Added Spectator mod handling if a major player isn't detected
+			if (majList[i] ~= nil) then
+				if(majList[i].leader ~= "LEADER_SPECTATOR"    and majList[i].leader ~= "LEADER_PACHACUTI"  ) then
+					if ( ( (majList[i].impassable_start + majList[i].impassable_inner + majList[i].impassable_outer) >= 12) or ((majList[i].impassable_start + majList[i].impassable_inner + majList[i].impassable_outer) >= 8 and (majList[i].water_start + majList[i].water_inner + majList[i].water_outer) >= 4 ) ) then
+						-- Check for Mountain Start
+						__Debug("Mountain Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
+						Terraforming_Mountain(Map.GetPlot(majList[i].plotX,majList[i].plotY),0)
+
+					end
+				end
+				if(majList[i].leader == "LEADER_PACHACUTI" and  (majList[i].impassable_start + majList[i].impassable_inner + majList[i].impassable_outer) < 2)  then
+						__Debug("Mountain Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
+						Terraforming_Mountain(Map.GetPlot(majList[i].plotX,majList[i].plotY),3)
+				end
+			end
+		end
+
+		-- Fix Walled in
+		for i = 1, major_count do
+			-- Added Spectator mod handling if a major player isn't detected
+			if (majList[i] ~= nil) then
+				if(majList[i].leader ~= "LEADER_SPECTATOR"  ) then
+					if ( ( (majList[i].impassable_start + majList[i].water_start ) > 4) and majList[i].leader ~= "LEADER_PACHACUTI"  ) then
+						-- Check for Walled-in
+						__Debug("Walled-In Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
+						Terraforming_Nuke_Mountain(Map.GetPlot(majList[i].plotX,majList[i].plotY))
+
+					end
+				end
+			end
+		end
+
+		-- Fix Trees missing / Plains 
+		if string.lower(mapName) ~= "tilted_axis.lua" then
+		for iPlotIndex = 0, Map.GetPlotCount()-1, 1 do
+			local rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
+			local pPlot = Map.GetPlotByIndex(iPlotIndex)
+			if (pPlot:GetY() > gridHeight/6 and pPlot:GetY() < gridHeight*4/9) or (pPlot:GetY() > 5*gridHeight/9 and pPlot:GetY() < gridHeight*5/6) then
+				if rng < 0.5 then
+				if pPlot:IsImpassable() == false and pPlot:IsWater() == false and pPlot:GetResourceType() == -1 and pPlot:GetFeatureType() == -1 and pPlot:GetTerrainType() ~= 7 and pPlot:GetTerrainType() ~= 6 and pPlot:GetTerrainType() ~= 7 and pPlot:GetTerrainType() ~= 12 and pPlot:GetTerrainType() ~= 13 then
+					if rng < 0.15 or  (rng < 0.33 and pPlot:GetTerrainType() == 3) then
+						TerrainBuilder.SetFeatureType(pPlot,3)
+					end
+				end
+				end
+			end
+		end
+			
+		end
+
+		for i = 1, major_count do
+			-- Added Spectator mod handling if a major player isn't detected
+			if (majList[i] ~= nil) then
+				if(majList[i].leader ~= "LEADER_SPECTATOR") then
+				-- Check for freshwater
+					local wplot = Map.GetPlot(majList[i].plotX,majList[i].plotY)
+					if (wplot:IsFreshWater() == false) then
+					-- Fix No Water
+						print("Water Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ); -- put a print to catch the error in non debug mode
+						Terraforming_Water(Map.GetPlot(majList[i].plotX,majList[i].plotY),majList[i].civ);
+					end
+				end
+			end
+		end
+		__Debug("Terraforming: Completed")
+		print ("Terraforming - Completed", os.date("%c"))
+
+		---------------------------------------------------------------------------------------------------------------
+		-- Starting the resources rebalancing in 3 phases: Strategic, Food and Production
+		---------------------------------------------------------------------------------------------------------------
+		---------------------------------------------------------------------------------------------------------------
+		-- Phase 1: Strategic Resource Balancing / Original Firaxis Code from AddBalancedResources() reworked
+		---------------------------------------------------------------------------------------------------------------
+
+		__Debug("Phase 1: Strategic Resource Balancing")
+
+		for i = 1, major_count do
+		-- Added Spectator mod handling if a major player isn't detected
+			if (majList[i] ~= nil) then
+				if(majList[i].leader ~= "LEADER_SPECTATOR"  ) then
+				if (Map.GetPlot(majList[i].plotX,majList[i].plotY):IsWater() == false) then
+					BalanceStrategic(Map.GetPlot(majList[i].plotX,majList[i].plotY))
+				end
+				end
+			end
+		end
+		
+		-- Phase 1 Completed
+		print ("Strategic Resouce Balancing - Completed", os.date("%c"))
+		
+		---------------------------------------------------------------------------------------------------------------
+		-- Phase 2: Food Resource Balancing / Original Fertility function Code from AddBalancedResources() reworked
+		---------------------------------------------------------------------------------------------------------------
+		local bStrategic_only = false
+		if (bStrategic_only == true) then
+			print("Debut Mode: Only Do Strategic Resources Rebalancing")
+		end
+
+		-- Check for Food in the starting area of each Major Civ
+		if (bStrategic_only == false) then
+		count = 0;
+		for i = 1, major_count do
+			local temp = 0;
+			
+			if (majList[i] == nil or majList[i].leader == "LEADER_SPECTATOR"  ) then
+
+				count = count + 1
+				else
+				startPlot = Map.GetPlot(majList[i].plotX, majList[i].plotY);
+				tempEval = EvaluateStartingLocation(startPlot)
+				majList[i].food_spawn_start = tempEval[5]+0.25 * tempEval[26] + tempEval[13]*0.75  -- Adjust for Mountains;;
+				majList[i].prod_spawn_start = tempEval[6]+0.25 * tempEval[27];
+				if (majList[i].civ == "CIVILIZATION_MALI" ) then
+					majList[i].food_spawn_start = majList[i].food_spawn_start + tempEval[12] * 1.5
+					elseif (majList[i].civ == "CIVILIZATION_CANADA" ) then
+						if m_BBGEnabled == true then
+							majList[i].food_spawn_start = majList[i].food_spawn_start + tempEval[11] * 1.75 -- was 1.25 would make Canada less prone to food correction
+						end
+					elseif (majList[i].civ == "CIVILIZATION_RUSSIA" ) then
+					majList[i].food_spawn_start = majList[i].food_spawn_start + tempEval[11] * 1 -- was 0 would make Russia less prone to food correction
+					elseif (majList[i].civ == "CIVILIZATION_MAORI" ) then
+					majList[i].food_spawn_start = math.max(majList[i].food_spawn_start,18) -- so Maori doesn't penalized other.
+				end
+				temp = majList[i].food_spawn_start;
+
+				if (temp > maxFood) then
+					maxFood = temp;
+				end
+
+				avgFood = avgFood + temp;
+		
+			end
+
+		end
+		
+		if (count > 0) then
+			__Debug(count , "Spectators detected.")
+		end
+
+		avgFood = avgFood / (major_count - count)	
+		
+		__Debug("Phase 2: Food Balancing: Average:", avgFood)
+
+		-- Check for Major Civ below threshold
+
+		for i = 1, major_count do
+			if (majList[i] ~= nil) then
+				if(majList[i].leader ~= "LEADER_SPECTATOR"  ) then
+				if (majList[i].food_spawn_start < ((avgFood) * (1 - dispersion*3)) or majList[i].food_spawn_start < minFood) then
+					__Debug("Need to adjust: ", majList[i].leader, majList[i].food_spawn_start, "Min Food:",minFood)
+					-- Try to Understand the reason for the low food
+					-- Is it Maori ?
+					if (Map.GetPlot(majList[i].plotX,majList[i].plotY):IsWater() == true) then
+						__Debug("Food balancing:", majList[i].leader, "Don't adjust Maori start");
+	
+				-- Is it a Mountain start?
+						elseif (majList[i].impassable_start > 1) then
+							__Debug("Food balancing:", majList[i].leader, "Mountains detected");
+
+				-- But is the leader biased toward Mountains? 
+							if (((majList[i].civ == "CIVILIZATION_INCA") and (math.floor(avgFood  - majList[i].food_spawn_start) < 4)) or ((majList[i].civ == "CIVILIZATION_MAPUCHE") and (math.floor(avgFood + iBalancingTwo - majList[i].food_spawn_start) < 4))) then
+								__Debug("Food balancing:", majList[i].leader, "Mountain Civ Detected: No need to re-balance");
+								else
+								__Debug("Food balancing:", majList[i].leader, "Start Mountains re-Balancing");
+								__Debug("Food balancing: Food missing:", math.max(math.floor(avgFood  - majList[i].food_spawn_start), minFood - majList[i].food_spawn_start));
+								count = 0;
+								for j = 1, math.max(math.floor(avgFood + 1 - majList[i].food_spawn_start), minFood - majList[i].food_spawn_start,5) do
+									if ((AddBonusFood(Map.GetPlot(majList[i].plotX,majList[i].plotY),iBalancingThree,3, majList[i].harborPlot) == false)) then
+										count = count + 1
+										if (count == 3) then
+											__Debug("Food balancing:", majList[i].leader, "Will grand a luxury");
+											AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
+											count = count + 1;
+										end
+									end
+								end
+							end
+
+						else
+
+				-- Well it has to be a shitty start then....
+							__Debug("Food balancing:", majList[i].leader, "Poor start detected");
+							__Debug("Food balancing: Food missing:", math.max(math.floor(avgFood  - majList[i].food_spawn_start),minFood - majList[i].food_spawn_start));
+							count = 0;
+							local count_2 = 0;
+							for j = 1, math.max(math.floor(avgFood  + 1 - majList[i].food_spawn_start), minFood - majList[i].food_spawn_start,5) do
+								if (majList[i].civ == "CIVILIZATION_MALI" and majList[i].desert_start > 0) then
+										__Debug("Food balancing:", majList[i].leader, "Desert start detected");
+										count = count + 1;
+										if count < 4 then
+											if ((AddBonusFood(Map.GetPlot(majList[i].plotX,majList[i].plotY),iBalancingThree,2, majList[i].harborPlot) == false)) then
+												count = count + 1;
+											end
+											elseif count == 3 then
+												__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Desert Start)");
+												AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
+											else
+												__Debug("Food balancing:", majList[i].leader, "No longer grant anything to avoid overloading the spawn (Desert Start)");
+							
+										end
+									elseif (majList[i].civ == "CIVILIZATION_RUSSIA" or majList[i].civ == "CIVILIZATION_CANADA" and majList[i].snow_start > 2) then
+										__Debug("Food balancing:", majList[i].leader, "Tundra start detected");
+										if ((AddBonusFood(Map.GetPlot(majList[i].plotX,majList[i].plotY),iBalancingThree,1, majList[i].harborPlot) == false)) then
+											count = count + 1;
+											if (count == 3) then
+												__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Tundra Start)");
+												AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
+												count = count + 1;
+											end
+											if (count == 5) then
+												__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Tundra Start)");
+												AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
+											end
+										end
+									elseif (majList[i].plains > 5) then
+										__Debug("Food balancing:", majList[i].leader, "Plains start detected");
+										count_2 = count_2 + 1;
+										if count_2 < 3 then
+											if ((AddBonusFood(Map.GetPlot(majList[i].plotX,majList[i].plotY),iBalancingThree,0, majList[i].harborPlot) == false)) then
+												count = count + 1;
+												if (count == 3) then
+												__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Plain Start)");
+												AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
+												count = count + 1;
+												end
+												if (count == 5) then
+												__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Plain Start)");
+												AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
+												end
+											end
+											elseif count_2 == 3 then
+											__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Plain Start)");
+											AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")											
+											else
+											__Debug("Food balancing:", majList[i].leader, "No longer grant anything to avoid overloading the spawn (Plain Start)");
+										end
+									else 
+									__Debug("Food balancing:", majList[i].leader, "Unordinary start detected");
+									if ((AddBonusFood(Map.GetPlot(majList[i].plotX,majList[i].plotY),iBalancingThree,0, majList[i].harborPlot) == false)) then
+										count = count + 1;
+										if (count == 3) then
+											__Debug("Food balancing:", majList[i].leader, "Will grand a luxury");
+											AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
+											count = count + 1;
+										end
+										if (count == 5) then
+											__Debug("Food balancing:", majList[i].leader, "Will grand a luxury");
+											AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
+										end
+									end
+
+								end
+							end
+	
+
+					end
+					
+				else
+					__Debug("No Need to adjust: ", majList[i].leader, majList[i].food_spawn_start)
+				end
+				end
+			end
+		end
+	
+
+		-- Phase 2 reduce the positive outliers (Yes Firaxis intended to correct positive outliers! here this is skwed to extrem outlier with "dispersion * 2")
+
+		-- Check for Major Civ below threshold
+		
+		if (startConfig ~= 3) then
+
+		for i = 1, major_count do
+			if (majList[i] ~= nil) then
+				if(majList[i].leader ~= "LEADER_SPECTATOR" and IsFloodCiv(majList[i].civ) == false ) then
+				if (majList[i].food_spawn_start > ((avgFood + iBalancingTwo) * (1 + dispersion * 1.5))) then
+					__Debug("Need to adjust Food Down: ", majList[i].leader);
+
+					if (math.ceil(majList[i].food_spawn_start - (avgFood + iBalancingTwo)-1) > 0) then
+						for j = 1, math.ceil(majList[i].food_spawn_start - (avgFood + iBalancingTwo)-1) do
+							RemoveFood(Map.GetPlot(majList[i].plotX,majList[i].plotY));
+						end
+					end
+				end
+				end
+			end
+		end
+
+		end
+
+
+		-- Phase 2 completed
+		print ("Food Balancing - Completed", os.date("%c"))
+		
+		
+		    ---- BEGIN Coastal work -------
       
       __Debug("---");
       __Debug("---");
@@ -715,327 +1043,10 @@ function BBS_Script()
       __Debug("---");
       __Debug("---");
       ---- END of Coastal balancing ------
-      
-
-		-- Fix Natural Wonders mountains problem
-		-- Will Handle in 1.4.7 from Database
-		--for iPlotIndex = 0, Map.GetPlotCount()-1 do
-		--	local natPlot = Map.GetPlotByIndex(iPlotIndex)
-		--	if (natPlot ~= nil) then
-		--		if (natPlot:IsNaturalWonder() == true and natPlot:GetFeatureType() ~= 29) then
-		--			for i = 0, 5 do
-		--				local adjacentPlot = GetAdjacentTiles(natPlot, i);
-		--				if (adjacentPlot ~= nil) then
-		--					if (adjacentPlot:IsImpassable() == true and adjacentPlot:GetFeatureType() ~= g_FEATURE_VOLCANO and adjacentPlot:IsNaturalWonder() == false) then
-		--						TerrainBuilder.SetTerrainType(adjacentPlot,adjacentPlot:GetTerrainType()-1);
-		--						if ( adjacentPlot:GetFeatureType() == g_FEATURE_VOLCANO) then
-		--							TerrainBuilder.SetFeatureType(adjacentPlot,-1);
-		--						end	
-		--					end
-		--				end
-		--			end
-		--		end
-		--	end
-		--end
-
-		-- Fix extreme Mountains Start
-		for i = 1, major_count do
-			-- Added Spectator mod handling if a major player isn't detected
-			if (majList[i] ~= nil) then
-				if(majList[i].leader ~= "LEADER_SPECTATOR"    and majList[i].leader ~= "LEADER_PACHACUTI"  ) then
-					if ( ( (majList[i].impassable_start + majList[i].impassable_inner + majList[i].impassable_outer) >= 12) or ((majList[i].impassable_start + majList[i].impassable_inner + majList[i].impassable_outer) >= 8 and (majList[i].water_start + majList[i].water_inner + majList[i].water_outer) >= 4 ) ) then
-						-- Check for Mountain Start
-						__Debug("Mountain Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
-						Terraforming_Mountain(Map.GetPlot(majList[i].plotX,majList[i].plotY),0)
-
-					end
-				end
-				if(majList[i].leader == "LEADER_PACHACUTI" and  (majList[i].impassable_start + majList[i].impassable_inner + majList[i].impassable_outer) < 2)  then
-						__Debug("Mountain Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
-						Terraforming_Mountain(Map.GetPlot(majList[i].plotX,majList[i].plotY),3)
-				end
-			end
-		end
-
-		-- Fix Walled in
-		for i = 1, major_count do
-			-- Added Spectator mod handling if a major player isn't detected
-			if (majList[i] ~= nil) then
-				if(majList[i].leader ~= "LEADER_SPECTATOR"  ) then
-					if ( ( (majList[i].impassable_start + majList[i].water_start ) > 4) and majList[i].leader ~= "LEADER_PACHACUTI"  ) then
-						-- Check for Walled-in
-						__Debug("Walled-In Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
-						Terraforming_Nuke_Mountain(Map.GetPlot(majList[i].plotX,majList[i].plotY))
-
-					end
-				end
-			end
-		end
-
-		-- Fix Trees missing / Plains 
-		if string.lower(mapName) ~= "tilted_axis.lua" then
-		for iPlotIndex = 0, Map.GetPlotCount()-1, 1 do
-			local rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
-			local pPlot = Map.GetPlotByIndex(iPlotIndex)
-			if (pPlot:GetY() > gridHeight/6 and pPlot:GetY() < gridHeight*4/9) or (pPlot:GetY() > 5*gridHeight/9 and pPlot:GetY() < gridHeight*5/6) then
-				if rng < 0.5 then
-				if pPlot:IsImpassable() == false and pPlot:IsWater() == false and pPlot:GetResourceType() == -1 and pPlot:GetFeatureType() == -1 and pPlot:GetTerrainType() ~= 7 and pPlot:GetTerrainType() ~= 6 and pPlot:GetTerrainType() ~= 7 and pPlot:GetTerrainType() ~= 12 and pPlot:GetTerrainType() ~= 13 then
-					if rng < 0.15 or  (rng < 0.33 and pPlot:GetTerrainType() == 3) then
-						TerrainBuilder.SetFeatureType(pPlot,3)
-					end
-				end
-				end
-			end
-		end
-			
-		end
-
-		for i = 1, major_count do
-			-- Added Spectator mod handling if a major player isn't detected
-			if (majList[i] ~= nil) then
-				if(majList[i].leader ~= "LEADER_SPECTATOR") then
-				-- Check for freshwater
-					local wplot = Map.GetPlot(majList[i].plotX,majList[i].plotY)
-					if (wplot:IsFreshWater() == false) then
-					-- Fix No Water
-						print("Water Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ); -- put a print to catch the error in non debug mode
-						Terraforming_Water(Map.GetPlot(majList[i].plotX,majList[i].plotY),majList[i].civ);
-					end
-				end
-			end
-		end
-		__Debug("Terraforming: Completed")
-		print ("Terraforming - Completed", os.date("%c"))
-
-		---------------------------------------------------------------------------------------------------------------
-		-- Starting the resources rebalancing in 3 phases: Strategic, Food and Production
-		---------------------------------------------------------------------------------------------------------------
-		---------------------------------------------------------------------------------------------------------------
-		-- Phase 1: Strategic Resource Balancing / Original Firaxis Code from AddBalancedResources() reworked
-		---------------------------------------------------------------------------------------------------------------
-
-		__Debug("Phase 1: Strategic Resource Balancing")
-
-		for i = 1, major_count do
-		-- Added Spectator mod handling if a major player isn't detected
-			if (majList[i] ~= nil) then
-				if(majList[i].leader ~= "LEADER_SPECTATOR"  ) then
-				if (Map.GetPlot(majList[i].plotX,majList[i].plotY):IsWater() == false) then
-					BalanceStrategic(Map.GetPlot(majList[i].plotX,majList[i].plotY))
-				end
-				end
-			end
-		end
 		
-		-- Phase 1 Completed
-		print ("Strategic Resouce Balancing - Completed", os.date("%c"))
 		
-		---------------------------------------------------------------------------------------------------------------
-		-- Phase 2: Food Resource Balancing / Original Fertility function Code from AddBalancedResources() reworked
-		---------------------------------------------------------------------------------------------------------------
-		local bStrategic_only = false
-		if (bStrategic_only == true) then
-			print("Debut Mode: Only Do Strategic Resources Rebalancing")
-		end
-
-		-- Check for Food in the starting area of each Major Civ
-		if (bStrategic_only == false) then
-		count = 0;
-		for i = 1, major_count do
-			local temp = 0;
-			
-			if (majList[i] == nil or majList[i].leader == "LEADER_SPECTATOR"  ) then
-
-				count = count + 1
-				else
-				startPlot = Map.GetPlot(majList[i].plotX, majList[i].plotY);
-				tempEval = EvaluateStartingLocation(startPlot)
-				majList[i].food_spawn_start = tempEval[5]+0.25 * tempEval[26] + tempEval[13]*0.75  -- Adjust for Mountains;;
-				majList[i].prod_spawn_start = tempEval[6]+0.25 * tempEval[27];
-				if (majList[i].civ == "CIVILIZATION_MALI" ) then
-					majList[i].food_spawn_start = majList[i].food_spawn_start + tempEval[12] * 1.5
-					elseif (majList[i].civ == "CIVILIZATION_CANADA" ) then
-						if m_BBGEnabled == true then
-							majList[i].food_spawn_start = majList[i].food_spawn_start + tempEval[11] * 1.75 -- was 1.25 would make Canada less prone to food correction
-						end
-					elseif (majList[i].civ == "CIVILIZATION_RUSSIA" ) then
-					majList[i].food_spawn_start = majList[i].food_spawn_start + tempEval[11] * 1 -- was 0 would make Russia less prone to food correction
-					elseif (majList[i].civ == "CIVILIZATION_MAORI" ) then
-					majList[i].food_spawn_start = math.max(majList[i].food_spawn_start,18) -- so Maori doesn't penalized other.
-				end
-				temp = majList[i].food_spawn_start;
-
-				if (temp > maxFood) then
-					maxFood = temp;
-				end
-
-				avgFood = avgFood + temp;
 		
-			end
-
-		end
 		
-		if (count > 0) then
-			__Debug(count , "Spectators detected.")
-		end
-
-		avgFood = avgFood / (major_count - count)	
-		
-		__Debug("Phase 2: Food Balancing: Average:", avgFood)
-
-		-- Check for Major Civ below threshold
-
-		for i = 1, major_count do
-			if (majList[i] ~= nil) then
-				if(majList[i].leader ~= "LEADER_SPECTATOR"  ) then
-				if (majList[i].food_spawn_start < ((avgFood + iBalancingTwo) * (1 - dispersion)) or majList[i].food_spawn_start < minFood) then
-					__Debug("Need to adjust: ", majList[i].leader, majList[i].food_spawn_start, "Min Food:",minFood)
-					-- Try to Understand the reason for the low food
-					-- Is it Maori ?
-					if (Map.GetPlot(majList[i].plotX,majList[i].plotY):IsWater() == true) then
-						__Debug("Food balancing:", majList[i].leader, "Don't adjust Maori start");
-	
-				-- Is it a Mountain start?
-						elseif (majList[i].impassable_start > 1) then
-							__Debug("Food balancing:", majList[i].leader, "Mountains detected");
-
-				-- But is the leader biased toward Mountains? 
-							if (((majList[i].civ == "CIVILIZATION_INCA") and (math.floor(avgFood + iBalancingTwo - majList[i].food_spawn_start) < 4)) or ((majList[i].civ == "CIVILIZATION_MAPUCHE") and (math.floor(avgFood + iBalancingTwo - majList[i].food_spawn_start) < 4))) then
-								__Debug("Food balancing:", majList[i].leader, "Mountain Civ Detected: No need to re-balance");
-								else
-								__Debug("Food balancing:", majList[i].leader, "Start Mountains re-Balancing");
-								__Debug("Food balancing: Food missing:", math.max(math.floor(avgFood + iBalancingTwo - majList[i].food_spawn_start), minFood - majList[i].food_spawn_start));
-								count = 0;
-								for j = 1, math.max(math.floor(avgFood + iBalancingTwo + 1 - majList[i].food_spawn_start), minFood - majList[i].food_spawn_start) do
-									if ((AddBonusFood(Map.GetPlot(majList[i].plotX,majList[i].plotY),iBalancingThree,3, majList[i].harborPlot) == false)) then
-										count = count + 1
-										if (count == math.min(3 - iBalancingTwo,1)) then
-											__Debug("Food balancing:", majList[i].leader, "Will grand a luxury");
-											AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
-											count = count + 1;
-										end
-										if (count == math.min(7 - iBalancingTwo,1)) then
-											__Debug("Food balancing:", majList[i].leader, "Will grand a luxury");
-											AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
-										end
-									end
-								end
-							end
-
-						else
-
-				-- Well it has to be a shitty start then....
-							__Debug("Food balancing:", majList[i].leader, "Poor start detected");
-							__Debug("Food balancing: Food missing:", math.max(math.floor(avgFood + iBalancingTwo - majList[i].food_spawn_start),minFood - majList[i].food_spawn_start));
-							count = 0;
-							local count_2 = 0;
-							for j = 1, math.max(math.floor(avgFood + iBalancingTwo + 1 - majList[i].food_spawn_start), minFood - majList[i].food_spawn_start) do
-								if (majList[i].civ == "CIVILIZATION_MALI" and majList[i].desert_start > 0) then
-										__Debug("Food balancing:", majList[i].leader, "Desert start detected");
-										count = count + 1;
-										if count < 4 then
-											if ((AddBonusFood(Map.GetPlot(majList[i].plotX,majList[i].plotY),iBalancingThree,2, majList[i].harborPlot) == false)) then
-												count = count + 1;
-											end
-											elseif count < 6 then
-												__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Desert Start)");
-												AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
-											else
-												__Debug("Food balancing:", majList[i].leader, "No longer grant anything to avoid overloading the spawn (Desert Start)");
-							
-										end
-									elseif (majList[i].civ == "CIVILIZATION_RUSSIA" or majList[i].civ == "CIVILIZATION_CANADA" and majList[i].snow_start > 2) then
-										__Debug("Food balancing:", majList[i].leader, "Tundra start detected");
-										if ((AddBonusFood(Map.GetPlot(majList[i].plotX,majList[i].plotY),iBalancingThree,1, majList[i].harborPlot) == false)) then
-											count = count + 1;
-											if (count == math.min(3 - iBalancingTwo,1)) then
-												__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Tundra Start)");
-												AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
-												count = count + 1;
-											end
-											if (count == math.min(7 - iBalancingTwo,1)) then
-												__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Tundra Start)");
-												AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
-											end
-										end
-									elseif (majList[i].plains > 5) then
-										__Debug("Food balancing:", majList[i].leader, "Plains start detected");
-										count_2 = count_2 + 1;
-										if count_2 < 3 then
-											if ((AddBonusFood(Map.GetPlot(majList[i].plotX,majList[i].plotY),iBalancingThree,0, majList[i].harborPlot) == false)) then
-												count = count + 1;
-												if (count == math.min(3 - iBalancingTwo,1)) then
-												__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Plain Start)");
-												AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
-												count = count + 1;
-												end
-												if (count == math.min(7 - iBalancingTwo,1)) then
-												__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Plain Start)");
-												AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
-												end
-											end
-											elseif count_2 == 3 then
-											__Debug("Food balancing:", majList[i].leader, "Will grand a luxury (Plain Start)");
-											AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")											
-											else
-											__Debug("Food balancing:", majList[i].leader, "No longer grant anything to avoid overloading the spawn (Plain Start)");
-										end
-									else 
-									__Debug("Food balancing:", majList[i].leader, "Unordinary start detected");
-									if ((AddBonusFood(Map.GetPlot(majList[i].plotX,majList[i].plotY),iBalancingThree,0, majList[i].harborPlot) == false)) then
-										count = count + 1;
-										if (count == math.min(3 - iBalancingTwo,1)) then
-											__Debug("Food balancing:", majList[i].leader, "Will grand a luxury");
-											AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
-											count = count + 1;
-										end
-										if (count == math.min(7 - iBalancingTwo,1)) then
-											__Debug("Food balancing:", majList[i].leader, "Will grand a luxury");
-											AddLuxuryStarting(Map.GetPlot(majList[i].plotX,majList[i].plotY),"food")
-										end
-									end
-
-								end
-							end
-	
-
-					end
-					
-				else
-					__Debug("No Need to adjust: ", majList[i].leader, majList[i].food_spawn_start)
-				end
-				end
-			end
-		end
-	
-
-		-- Phase 2 reduce the positive outliers (Yes Firaxis intended to correct positive outliers! here this is skwed to extrem outlier with "dispersion * 2")
-
-		-- Check for Major Civ below threshold
-		
-		if (startConfig ~= 3) then
-
-		for i = 1, major_count do
-			if (majList[i] ~= nil) then
-				if(majList[i].leader ~= "LEADER_SPECTATOR" and IsFloodCiv(majList[i].civ) == false ) then
-				if (majList[i].food_spawn_start > ((avgFood + iBalancingTwo) * (1 + dispersion * 1.5))) then
-					__Debug("Need to adjust Food Down: ", majList[i].leader);
-
-					if (math.ceil(majList[i].food_spawn_start - (avgFood + iBalancingTwo)-1) > 0) then
-						for j = 1, math.ceil(majList[i].food_spawn_start - (avgFood + iBalancingTwo)-1) do
-							RemoveFood(Map.GetPlot(majList[i].plotX,majList[i].plotY));
-						end
-					end
-				end
-				end
-			end
-		end
-
-		end
-
-
-		-- Phase 2 completed
-		print ("Food Balancing - Completed", os.date("%c"))
 		---------------------------------------------------------------------------------------------------------------------------------------------------------
 		-- Phase 3: Production Balancing: Firaxis didn't have production rebalancing in their AddBalancedResources(), so this mimics the Phase 2
 		----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1272,6 +1283,7 @@ function BBS_Script()
 			local max_best_tile_4 = data[4]
 			local avg_best_ring_1 = data[5]
 			local avg_best_ring_2 = data[6]
+			majList = data[7];
 		
 			for i = 1, major_count do
 			if (majList[i] ~= nil) then
@@ -1299,6 +1311,7 @@ function BBS_Script()
 			local max_best_tile_4 = data[4]
 			local avg_best_ring_1 = data[5]
 			local avg_best_ring_2 = data[6]
+			majList = data[7];
 		
 		-- High Roll a.k.a. Coloo's Greed
 		if bHighRoll == true then
@@ -1334,6 +1347,7 @@ function BBS_Script()
 			local max_best_tile_4 = data[4]
 			local avg_best_ring_1 = data[5]
 			local avg_best_ring_2 = data[6]
+			majList = data[7];
 			for i = 1, major_count do
 			if (majList[i] ~= nil) then
 				if(majList[i].leader ~= "LEADER_SPECTATOR") then
@@ -2097,8 +2111,35 @@ function AddBonusFood(plot,intensity, flag, harborPlot)
 			if (adjacentPlot ~= nil) then
 
 				terrainType = adjacentPlot:GetTerrainType();
+				-- Floodplains Only
+				if (adjacentPlot:GetFeatureType() == g_FEATURE_FLOODPLAINS or adjacentPlot:GetFeatureType() == g_FEATURE_FLOODPLAINS_PLAINS or adjacentPlot:GetFeatureType() == g_FEATURE_FLOODPLAINS_GRASSLAND)  and  adjacentPlot:GetResourceCount() < 1 then
+					
+					rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
+					if rng < 0.75 then
+						-- Plains wheat
+						ResourceBuilder.SetResourceType(adjacentPlot, 9, 1);
+						__Debug("Food Balancing X: ", adjacentPlot:GetX(), "Food Balancing Y: ", adjacentPlot:GetY(), "Added wheat on Floodplains");
+						return true;
+					end
+				
+				end
+				
+				-- Already with a resource
+				if (terrainType == 4 and  adjacentPlot:GetResourceType() == 7) then
+					
+					rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
+					
+					if rng < 0.25 then
+						-- Plains wheat
+						TerrainBuilder.SetTerrainType(adjacentPlot,1);
+						__Debug("Food Balancing X: ", adjacentPlot:GetX(), "Food Balancing Y: ", adjacentPlot:GetY(), "Converted Plains Hill Sheep into Grassland Hill Ship");
+						return true;
+					end
+				
+				end				
+				
 
-			-- Floodplains and Volcano failsafe
+				-- Floodplains and Volcano failsafe
 				if adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS  and  adjacentPlot:GetResourceCount() < 1  and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH and adjacentPlot:GetFeatureType() ~= g_FEATURE_VOLCANO and adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_PLAINS and adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_GRASSLAND and adjacentPlot:IsNaturalWonder() == false then
 
 					rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
@@ -3118,6 +3159,7 @@ function Terraforming_Best_Refresh(majList,major_count,step,bHighRoll)
 				else
 				local startPlot = Map.GetPlot(majList[i].plotX, majList[i].plotY);
 				local tempEval = EvaluateStartingLocation(startPlot)
+				majList[i].isBase22 = tempEval[31];
 				--	Ring 1
 				majList[i].best_tile = tempEval[24];
 				majList[i].best_tile_2 = tempEval[25];
@@ -3192,7 +3234,7 @@ function Terraforming_Best_Refresh(majList,major_count,step,bHighRoll)
 		__Debug("Best Ring 2 Tile:", max_best_tile_2,best_civ_2);
 		__Debug("Best Raw Yields:", max_best_tile_3,best_civ_3);
 		__Debug("Best Overall Score:", max_best_tile_4,best_civ_4);
-		output = { max_best_tile_1,max_best_tile_2,max_best_tile_3,max_best_tile_4,avg_best_ring_1,avg_best_ring_2}
+		output = { max_best_tile_1,max_best_tile_2,max_best_tile_3,max_best_tile_4,avg_best_ring_1,avg_best_ring_2,majList}
 		return output
 
 end

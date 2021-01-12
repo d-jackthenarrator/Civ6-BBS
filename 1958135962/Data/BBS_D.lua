@@ -271,6 +271,11 @@ include "MapEnums"
 -- 		Natural Wonder Placement Improvement (fixed Firaxis rare Volcano bug)
 --		The yield concentration phase have another step to ensure nearer tiles have priority when buffing
 --		Minor tweaks
+-- 1.5.6
+--		Fix an error on 2:2 base function (ty Jack The Ripper)
+--		Replaced Map.GetPlotXYWithRangeCheck with GetAdjacentTiles in checks as Firaxis function seemed buggy
+--		Coastal check is now after the food check to avoid too many fishes in some scenario
+--		Added some food cases for Floodplains start and existing resource
 
 
 
@@ -288,7 +293,7 @@ include "MapEnums"
 --	Run spawn correction Coastal (failsafe to prevent harbor blocked by reefs) 
 --	Run Choke point analysis (prevent crashes)
 
-g_version = "1.5.5"
+g_version = "1.5.6"
 
 -----------------------------------------------------------------------------
 function __Debug(...)
@@ -458,7 +463,7 @@ function Init_D_Balance()
 	print ("---------------------------------------------------------");
 	print ("------------- BBS Script v"..g_version.." -D- Init -------------");
 	print ("---------------------------------------------------------");
-
+	
 	if (Game:GetProperty("BBS_INIT_COUNT") == nil) then
 		Game:SetProperty("BBS_INIT_COUNT",1)
 		Clean()
