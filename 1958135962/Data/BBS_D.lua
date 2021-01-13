@@ -363,8 +363,13 @@ function Clean()
 				for j = 1, major_count do
 					if (PlayerConfigurations[major_table[j]]:GetLeaderTypeName() ~= "LEADER_SPECTATOR" and PlayerConfigurations[major_table[j]]:GetHandicapTypeID() ~= 2021024770 and PlayerConfigurations[major_table[j]]:GetLeaderTypeName() ~= "LEADER_KUPE" and major_table[i] ~= major_table[j]) then
 						local pStartPlot_j = Players[major_table[j]]:GetStartingPlot()
-						local distance = Map.GetPlotDistance(pStartPlot_i:GetIndex(),pStartPlot_j:GetIndex())
-						__Debug("I:", i,"J:", j,"Distance:",distance)
+						local distance = 99;
+						if pStartPlot_i ~= nil and pStartPlot_j ~= nil then
+							distance = Map.GetPlotDistance(pStartPlot_i:GetIndex(),pStartPlot_j:GetIndex(),i,j)
+							__Debug("I:", i,"J:", j,"Distance:",distance)
+							else
+							print("Error: Minor",pStartPlot_i,pStartPlot_j)
+						end
 						if (distance < 9 ) then
 							print ("Init: Minimum CPL distance rule breached");
 							if (Game:GetProperty("BBS_MINOR_FAILING_TOTAL") == nil) then
@@ -378,8 +383,13 @@ function Clean()
 				for j = 1, minor_count do
 					if (Players[minor_table[j]]:IsAlive() == true) then
 						local pStartPlot_j = Players[minor_table[j]]:GetStartingPlot()
-						local distance = Map.GetPlotDistance(pStartPlot_i:GetIndex(),pStartPlot_j:GetIndex())
-						__Debug("I:", i,"J:", j,"Distance:",distance)
+						local distance = 99
+						if pStartPlot_i ~= nil and pStartPlot_j ~= nil then
+							Map.GetPlotDistance(pStartPlot_i:GetIndex(),pStartPlot_j:GetIndex())
+							__Debug("I:", i,"J:", j,"Distance:",distance)
+							else
+							print("Error: Minor",pStartPlot_i,pStartPlot_j,i,j)
+						end
 						if (distance < 6 ) or pStartPlot_i == pStartPlot_j then
 							print ("Init: Minimum CPL distance rule breached");
 							if (Game:GetProperty("BBS_MINOR_FAILING_TOTAL") == nil) then

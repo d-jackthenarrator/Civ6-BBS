@@ -157,8 +157,9 @@ function BBS_NaturalWonderGenerator:__CheckWonders()
 				TerrainBuilder.SetTerrainType(pPlot, BBS_ConvertToMountain(pPlot:GetTerrainType()))
 				else
 				for j = 1, 50 do
-				local otherPlot = GetAdjacentTiles(plot, j)
+				local otherPlot = GetAdjacentTiles(pPlot, j)
 					if(otherPlot) then
+						
 						if(otherPlot:IsNaturalWonder() == true and otherPlot:GetFeatureType() ~= CheckedWonder) then
 							print ("Clumped Wonder Detected: ",tostring(GameInfo.Features[otherPlot:GetFeatureType()].Name),"X:",otherPlot:GetX(),"Y;",otherPlot:GetY())
 							TerrainBuilder.SetFeatureType(otherPlot,-1)
