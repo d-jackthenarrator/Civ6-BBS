@@ -293,7 +293,7 @@ include "MapEnums"
 --	Run spawn correction Coastal (failsafe to prevent harbor blocked by reefs) 
 --	Run Choke point analysis (prevent crashes)
 
-g_version = "1.5.6"
+g_version = "1.5.7"
 
 -----------------------------------------------------------------------------
 function __Debug(...)
@@ -365,8 +365,8 @@ function Clean()
 						local pStartPlot_j = Players[major_table[j]]:GetStartingPlot()
 						local distance = 99;
 						if pStartPlot_i ~= nil and pStartPlot_j ~= nil then
-							distance = Map.GetPlotDistance(pStartPlot_i:GetIndex(),pStartPlot_j:GetIndex(),i,j)
-							__Debug("I:", i,"J:", j,"Distance:",distance)
+							distance = Map.GetPlotDistance(pStartPlot_i:GetIndex(),pStartPlot_j:GetIndex())
+							print("I:", i,"J:", j,"Distance:",distance)
 							else
 							print("Error: Minor",pStartPlot_i,pStartPlot_j)
 						end
@@ -473,7 +473,7 @@ function Init_D_Balance()
 	print ("---------------------------------------------------------");
 	print ("------------- BBS Script v"..g_version.." -D- Init -------------");
 	print ("---------------------------------------------------------");
-	
+
 	if (Game:GetProperty("BBS_INIT_COUNT") == nil) then
 		Game:SetProperty("BBS_INIT_COUNT",1)
 		Clean()
