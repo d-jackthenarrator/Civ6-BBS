@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	BBS_AssignStartingPlot.lua    -- 1.5.5
+--	FILE:	BBS_AssignStartingPlot.lua    -- 1.5.8
 --	AUTHOR:  D. / Jack The Narrator, Kilua
 --	PURPOSE: Custom Spawn Placement Script
 ------------------------------------------------------------------------------
@@ -962,20 +962,12 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 				elseif (bias.Type == "CUSTOM_KING_OF_THE_NORTH") then	
 					foundBiasNordic = true;
 					if MapConfiguration.GetValue("MAP_SCRIPT") ~= "Tilted_Axis.lua"  then
-						local max = 0;
-						local min = 0;
-						if Map.GetMapSize() == 4 then
-							max = 12 -- math.ceil(0.5*gridHeight * self.uiStartMaxY / 100);
-							min = 12 -- math.ceil(0.5*gridHeight * self.uiStartMinY / 100);
-							elseif Map.GetMapSize() == 5 or  Map.GetMapSize() > 5 then
-							max = 14
-							min = 14
-							elseif Map.GetMapSize() == 3 then
-							max = 10
-							min = 10	
-							else
-							max = 8
-							min = 8
+						local max = 17;
+						local min = 17;
+						if Map.GetMapSize() ~= nil then
+							local inc = tonumber(Map.GetMapSize())
+							max = max + inc - 2
+							min = min + inc - 2
 						end	
 
 						if(plot:GetY() <= min or plot:GetY() > gridHeight - max) then

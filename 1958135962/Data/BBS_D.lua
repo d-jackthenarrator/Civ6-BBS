@@ -276,6 +276,12 @@ include "MapEnums"
 --		Replaced Map.GetPlotXYWithRangeCheck with GetAdjacentTiles in checks as Firaxis function seemed buggy
 --		Coastal check is now after the food check to avoid too many fishes in some scenario
 --		Added some food cases for Floodplains start and existing resource
+-- 1.5.7
+--		Minor fixes
+-- 1.5.8
+--		Compatible with Vietname patch
+--		Mapsize directly used for Distance in  nordics
+--		Fixed an issue allowing strategics to be replaced by stones incorrectly
 
 
 
@@ -293,7 +299,7 @@ include "MapEnums"
 --	Run spawn correction Coastal (failsafe to prevent harbor blocked by reefs) 
 --	Run Choke point analysis (prevent crashes)
 
-g_version = "1.5.7"
+g_version = "1.5.8"
 
 -----------------------------------------------------------------------------
 function __Debug(...)

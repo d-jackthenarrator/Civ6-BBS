@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	 BBS_Balance.lua 1.5.5
+--	FILE:	 BBS_Balance.lua 1.5.8
 --	AUTHOR:  D. / Jack The Narrator, 57Fan
 --	PURPOSE: Rebalance the map spawn post placement 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -506,30 +506,27 @@ function BBS_Script()
 				if (majList[i] ~= nil) then
 					if(majList[i].leader ~= "LEADER_SPECTATOR"  ) then
 						-- Check for Tundra Starts
-						if ( ( ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 12 or ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 6 
-							and (majList[i].water_start + majList[i].water_inner + majList[i].water_outer) > 6 ) ) ) 
-							and IsTundraCiv(majList[i].civ) == false ) then
+						if ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 6 and IsTundraCiv(majList[i].civ) == false ) then
 							__Debug("Terraforming Polar Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
-							if IsDesertCiv(majList[i].civ) == true then
-								Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
-								else
-								--Terraforming_Polar_Start(Map.GetPlot(majList[i].plotX,majList[i].plotY));
-								Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
-							end
+							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
+						end
+						
+						if ( (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start) > 6 and IsDesertCiv(majList[i].civ) == false ) then
+							__Debug("Terraforming Desert Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
+							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
+						end
 						
 
-						elseif( IsDesertCiv(majList[i].civ) == true) then -- Now forces to Terraform Mali to counterbalance the lower amount of deserts on the map
-						__Debug("Mali Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
-						Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,2);
-						
-						elseif( IsTundraCiv(majList[i].civ) == true ) then
-						__Debug("Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
-						Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,1);
-						
-						elseif( IsTundraCiv(majList[i].civ) == false and  ((majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer > 0) or (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start > 0)) )then
-						__Debug("Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
-						Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
+						if( IsDesertCiv(majList[i].civ) == true) then -- Now forces to Terraform Mali to counterbalance the lower amount of deserts on the map
+							__Debug("Mali Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
+							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,2);
 						end
+						
+						if( IsTundraCiv(majList[i].civ) == true ) then
+							__Debug("Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
+							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,1);
+						end
+
 					end
 				end
 			end
@@ -606,7 +603,7 @@ function BBS_Script()
 			local rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
 			local pPlot = Map.GetPlotByIndex(iPlotIndex)
 			if (pPlot:GetY() > gridHeight/6 and pPlot:GetY() < gridHeight*4/9) or (pPlot:GetY() > 5*gridHeight/9 and pPlot:GetY() < gridHeight*5/6) then
-				if rng < 0.5 then
+				if rng < 0.55 then
 				if pPlot:IsImpassable() == false and pPlot:IsWater() == false and pPlot:GetResourceType() == -1 and pPlot:GetFeatureType() == -1 and pPlot:GetTerrainType() ~= 7 and pPlot:GetTerrainType() ~= 6 and pPlot:GetTerrainType() ~= 7 and pPlot:GetTerrainType() ~= 12 and pPlot:GetTerrainType() ~= 13 then
 					if rng < 0.15 or  (rng < 0.33 and pPlot:GetTerrainType() == 3) then
 						TerrainBuilder.SetFeatureType(pPlot,3)
@@ -2140,7 +2137,7 @@ function AddBonusFood(plot,intensity, flag, harborPlot)
 				
 
 				-- Floodplains and Volcano failsafe
-				if adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS  and  adjacentPlot:GetResourceCount() < 1  and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH and adjacentPlot:GetFeatureType() ~= g_FEATURE_VOLCANO and adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_PLAINS and adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_GRASSLAND and adjacentPlot:IsNaturalWonder() == false then
+				if adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS  and  adjacentPlot:GetResourceType() < 0  and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH and adjacentPlot:GetFeatureType() ~= g_FEATURE_VOLCANO and adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_PLAINS and adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_GRASSLAND and adjacentPlot:IsNaturalWonder() == false then
 
 					rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
 
@@ -2405,18 +2402,18 @@ function AddBonusProd(plot, intensity,flag)
 		if (adjacentPlot ~= nil) then
 			terrainType = adjacentPlot:GetTerrainType();
 			rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
-			
+			-- volcano and floodplains safe
 			if (adjacentPlot:IsNaturalWonder() == false and adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS and adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_PLAINS and adjacentPlot:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_GRASSLAND and adjacentPlot:GetFeatureType() ~= g_FEATURE_VOLCANO) then
 			
+				-- No Resource
+				if (adjacentPlot:GetResourceType() < 0) then 
 			
-				if (adjacentPlot:GetResourceCount() < 1) then 
 			
-			
-			
+					-- No feature
 					if((adjacentPlot:GetFeatureType() == -1) and (adjacentPlot:IsImpassable() == false) and (adjacentPlot:IsWater() == false) and  (adjacentPlot:GetTerrainType() ~= 6) and (adjacentPlot:GetTerrainType() ~= 7) and (adjacentPlot:GetTerrainType() ~= 12) and (adjacentPlot:GetTerrainType() ~= 13)) then
 				--Wood
 				--__Debug("Prod balancing: Wood");
-						if rng > 0.1 then
+						if rng > 0.05 then
 							TerrainBuilder.SetFeatureType(adjacentPlot,3);
 							ResourceBuilder.SetResourceType(adjacentPlot, -1);
 							__Debug("Prod Balancing X: ", adjacentPlot:GetX(), "Prod Balancing Y: ", adjacentPlot:GetY(), "Added: Wood");
@@ -2424,42 +2421,48 @@ function AddBonusProd(plot, intensity,flag)
 						end
 					end
 					
-						
-					elseif (terrainType == 0 or terrainType == 1) then
+					-- Grass	
+					if (terrainType == 0 or terrainType == 1) then
 						ResourceBuilder.SetResourceType(adjacentPlot, 8, 1);
 						TerrainBuilder.SetFeatureType(adjacentPlot,-1);
 						__Debug("Food Balancing X: ", adjacentPlot:GetX(), "Food Balancing Y: ", adjacentPlot:GetY(), "Flat land with stones");
 						return true
-	
-					elseif(terrainType == 0  and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH) then
+					end
+					
+					-- Grass no marsh
+					if(terrainType == 0  and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH) then
 					-- Convert to Hills
 							if(rng > limit_1) then
 							TerrainBuilder.SetTerrainType(adjacentPlot,1);
 								__Debug("Prod Balancing X: ", adjacentPlot:GetX(), "Y: ", adjacentPlot:GetY(), "Turned the tile to a Grassland Hill");
 							return true;
 							end
-					elseif(terrainType == 3 and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH) then
+					end
+					
+					-- Plains no marsh
+					if(terrainType == 3 and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH) then
 							-- Convert to Hills
 							if(rng > limit_1) then
 								TerrainBuilder.SetTerrainType(adjacentPlot,4);
 							__Debug("Prod Balancing X: ", adjacentPlot:GetX(), "Y: ", adjacentPlot:GetY(), "Turned the tile to a Plain Hill");
 								return true;
 							end
-
-					elseif(terrainType == 6   and adjacentPlot:GetFeatureType() ~= g_FEATURE_OASIS) then
+					end
+					
+					if(terrainType == 6   and adjacentPlot:GetFeatureType() ~= g_FEATURE_OASIS) then
 				-- Convert to Hills
 							if(rng > limit_1) then
 									TerrainBuilder.SetTerrainType(adjacentPlot,7);
 								__Debug("Prod Balancing X: ", adjacentPlot:GetX(), "Y: ", adjacentPlot:GetY(), "Turned the tile to a Desert Hill");
 									return true;
 								end
+					end		
 								
-								
-					elseif((terrainType == 2 and flag ~= 3 ) 
-				or (terrainType == 5 and flag ~= 3 ) 
-				or (terrainType == 8 and flag ~= 3 ) 
-				or (terrainType == 11 and flag ~= 3) 
-				or  (terrainType == 14 and flag ~= 3) ) then
+					if((terrainType == 2 and flag ~= 3 ) 
+						or (terrainType == 5 and flag ~= 3 ) 
+						or (terrainType == 8 and flag ~= 3 ) 
+						or (terrainType == 11 and flag ~= 3) 
+						or  (terrainType == 14 and flag ~= 3) ) then
 				-- Convert to Plain Hills
 							if(rng > limit_1) then
 					TerrainBuilder.SetTerrainType(adjacentPlot,terrainType - 1);
@@ -2469,17 +2472,18 @@ function AddBonusProd(plot, intensity,flag)
 					__Debug("Prod Balancing X: ", adjacentPlot:GetX(), "Y: ", adjacentPlot:GetY(), "Turned the Mountain tile to a Hill");
 								return true;
 								end
-	
-					elseif(terrainType == 9  and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH) then
+					end
+					
+					if(terrainType == 9  and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH) then
 				-- Convert to Hills
 							if(rng > limit_1) then
 								TerrainBuilder.SetTerrainType(adjacentPlot,10);
 								__Debug("Prod Balancing X: ", adjacentPlot:GetX(), "Y: ", adjacentPlot:GetY(), "Turned the tile to a Tundra Hill");
 								return true;
 							end
+					end		
 							
-							
-					elseif((terrainType == 7 ) or (terrainType == 10 )) then
+					if((terrainType == 7 ) or (terrainType == 10 )) then
 				-- copper
 				--__Debug("Food balancing: Copper");
 								if(ResourceBuilder.CanHaveResource(adjacentPlot, 2)) then
@@ -2488,8 +2492,8 @@ function AddBonusProd(plot, intensity,flag)
 							__Debug("Prod Balancing X: ", adjacentPlot:GetX(), "Prod Balancing Y: ", adjacentPlot:GetY(), "Added: Copper");
 							return true;
 							end
-
-					elseif((terrainType == 9 or terrainType == 10) ) then
+					end
+					if((terrainType == 9 or terrainType == 10) ) then
 						-- Deer
 
 							if(ResourceBuilder.CanHaveResource(adjacentPlot, 4)) then
@@ -2497,11 +2501,10 @@ function AddBonusProd(plot, intensity,flag)
 							__Debug("Prod Balancing X: ", adjacentPlot:GetX(), "Prod Balancing Y: ", adjacentPlot:GetY(), "Added: Deer");
 							return true;
 							end
-
-					else
-			
+					end			
 				end
-			
+				
+				-- Water
 				if(terrainType == 15 and adjacentPlot:GetFeatureType() == -1 and (adjacentPlot:GetResourceCount() < 1 or adjacentPlot:GetResourceType() == 5 ) ) then
 					bWater = true;
 					for j = 0, 5 do

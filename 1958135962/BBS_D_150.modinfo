@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Mod id="c88cba8b-8311-4d35-90c3-51a4a5d6654f" version="157">
+<Mod id="c88cba8b-8311-4d35-90c3-51a4a5d6654f" version="158">
 	<Properties>
-		<Name>Better Balanced Starts 1.5.7</Name>
+		<Name>Better Balanced Starts 1.5.8</Name>
 		<Description>Balance spawn locations for Multiplayer</Description>
 		<Teaser></Teaser>
 		<Authors>D. / Jack The Narrator</Authors>
