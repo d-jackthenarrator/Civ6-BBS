@@ -2315,7 +2315,7 @@ function AddBonusFood(plot,intensity, flag, harborPlot)
 							or (terrainType == 14 and flag ~= 3 and flag ~= 1)))  then
 					-- Convert to Flatland or Hills
 							rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
-							if rng > 0.80 and terrainType == 2 then
+							if rng > 0.90 and terrainType == 2 then
 								TerrainBuilder.SetTerrainType(adjacentPlot,terrainType - 2);
 								ResourceBuilder.SetResourceType(adjacentPlot, 8, 1);
 								__Debug("Food Balancing X: ", adjacentPlot:GetX(), "Food Balancing Y: ", adjacentPlot:GetY(), "Turned the Grass Mountain to a Flat land with stones");
@@ -2422,15 +2422,17 @@ function AddBonusProd(plot, intensity,flag)
 					end
 					
 					-- Grass	
-					if (terrainType == 0 or terrainType == 1) then
+					rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
+					if (terrainType == 0 or terrainType == 1) and rng > 0.90 then
 						ResourceBuilder.SetResourceType(adjacentPlot, 8, 1);
 						TerrainBuilder.SetFeatureType(adjacentPlot,-1);
 						__Debug("Food Balancing X: ", adjacentPlot:GetX(), "Food Balancing Y: ", adjacentPlot:GetY(), "Flat land with stones");
 						return true
 					end
 					
+					rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
 					-- Grass no marsh
-					if(terrainType == 0  and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH) then
+					if(terrainType == 0  and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH) and rng > 0.50 then
 					-- Convert to Hills
 							if(rng > limit_1) then
 							TerrainBuilder.SetTerrainType(adjacentPlot,1);
@@ -2439,8 +2441,9 @@ function AddBonusProd(plot, intensity,flag)
 							end
 					end
 					
+					rng = TerrainBuilder.GetRandomNumber(100,"test")/100;
 					-- Plains no marsh
-					if(terrainType == 3 and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH) then
+					if(terrainType == 3 and adjacentPlot:GetFeatureType() ~= g_FEATURE_MARSH) and rng > 0.50 then
 							-- Convert to Hills
 							if(rng > limit_1) then
 								TerrainBuilder.SetTerrainType(adjacentPlot,4);
