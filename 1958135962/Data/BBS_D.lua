@@ -282,6 +282,9 @@ include "MapEnums"
 --		Compatible with Vietname patch
 --		Mapsize directly used for Distance in  nordics
 --		Fixed an issue allowing strategics to be replaced by stones incorrectly
+-- 1.5.9
+--		Fixed an index error sometimes leading for a tile to be changed twice
+--		No more load confirmation in PBC and Hotseat
 
 
 
@@ -299,7 +302,7 @@ include "MapEnums"
 --	Run spawn correction Coastal (failsafe to prevent harbor blocked by reefs) 
 --	Run Choke point analysis (prevent crashes)
 
-g_version = "1.5.8"
+g_version = "1.5.9"
 
 -----------------------------------------------------------------------------
 function __Debug(...)

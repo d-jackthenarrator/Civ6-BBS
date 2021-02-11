@@ -10,8 +10,10 @@ function OnLoadScreenClose()
 	if (Game:GetProperty("BBS_INIT_COUNT") ~= nil) then
 		print(Game:GetProperty("BBS_INIT_COUNT"))
 		if Game:GetProperty("BBS_INIT_COUNT") > 1 then
-			--OnStatusMessage( "BBS reloaded succesfully! ("..g_version..")", 10, ReportingStatusTypes.DEFAULT )
-			NotificationManager.SendNotification(Players[Game.GetLocalPlayer()], NotificationTypes.USER_DEFINED_1, "BBS reloaded succesfully! ("..g_version..")")
+			if GameConfiguration.IsPlayByCloud() == false and GameConfiguration.IsHotseat() == false then
+				--OnStatusMessage( "BBS reloaded succesfully! ("..g_version..")", 10, ReportingStatusTypes.DEFAULT )
+				NotificationManager.SendNotification(Players[Game.GetLocalPlayer()], NotificationTypes.USER_DEFINED_1, "BBS reloaded succesfully! ("..g_version..")")
+			end
 			else
 			if (Game:GetProperty("BBS_DISTANCE_ERROR") ~= nil) then
 				--OnStatusMessage( Game:GetProperty("BBS_DISTANCE_ERROR"), 600, ReportingStatusTypes.DEFAULT )

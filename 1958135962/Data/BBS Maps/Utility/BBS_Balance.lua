@@ -3164,38 +3164,38 @@ function Terraforming_Best_Refresh(majList,major_count,step,bHighRoll)
 				
 				else
 				local startPlot = Map.GetPlot(majList[i].plotX, majList[i].plotY);
-				local tempEval = EvaluateStartingLocation(startPlot)
-				majList[i].isBase22 = tempEval[31];
+				local _tempEval = EvaluateStartingLocation(startPlot)
+				majList[i].isBase22 = _tempEval[31];
 				--	Ring 1
-				majList[i].best_tile = tempEval[24];
-				majList[i].best_tile_2 = tempEval[25];
-				majList[i].best_tile_3 = tempEval[36];
+				majList[i].best_tile = _tempEval[24];
+				majList[i].best_tile_2 = _tempEval[25];
+				majList[i].best_tile_3 = _tempEval[36];
 				-- Ring 2
-				majList[i].best_tile_inner = tempEval[28]; 
-				majList[i].best_tile_inner_2 = tempEval[29];
-				majList[i].tundra_start = tempEval[11];
-				if (majList[i].civ == "CIVILIZATION_RUSSIA" or majList[i].civ == "CIVILIZATION_CANADA" ) and tempEval[11] > 4 then
+				majList[i].best_tile_inner = _tempEval[28]; 
+				majList[i].best_tile_inner_2 = _tempEval[29];
+				majList[i].tundra_start = _tempEval[11];
+				if (majList[i].civ == "CIVILIZATION_RUSSIA" or majList[i].civ == "CIVILIZATION_CANADA" ) and _tempEval[11] > 4 then
 				-- Russia/Canada on Tundra
 				--	Ring 1
-				majList[i].best_tile = tempEval[24]+tundra_buff;
-				majList[i].best_tile_2 = tempEval[25]+tundra_buff;
-				majList[i].best_tile_3 = tempEval[36]+tundra_buff;
+				majList[i].best_tile = _tempEval[24]+tundra_buff;
+				majList[i].best_tile_2 = _tempEval[25]+tundra_buff;
+				majList[i].best_tile_3 = _tempEval[36]+tundra_buff;
 				-- Ring 2
-				majList[i].best_tile_inner = tempEval[28]+tundra_buff; 
-				majList[i].best_tile_inner_2 = tempEval[29]+tundra_buff;
+				majList[i].best_tile_inner = _tempEval[28]+tundra_buff; 
+				majList[i].best_tile_inner_2 = _tempEval[29]+tundra_buff;
 				end
-				majList[i].desert_start = tempEval[12];
-				if (majList[i].civ == "CIVILIZATION_MALI" ) and tempEval[12] > 4 then
+				majList[i].desert_start = _tempEval[12];
+				if (majList[i].civ == "CIVILIZATION_MALI" ) and _tempEval[12] > 4 then
 				-- Mali on Desert
 				--	Ring 1
-				majList[i].best_tile = tempEval[24]+desert_buff;
-				majList[i].best_tile_2 = tempEval[25]+desert_buff;
-				majList[i].best_tile_3 = tempEval[36]+desert_buff;
+				majList[i].best_tile = _tempEval[24]+desert_buff;
+				majList[i].best_tile_2 = _tempEval[25]+desert_buff;
+				majList[i].best_tile_3 = _tempEval[36]+desert_buff;
 				-- Ring 2
-				majList[i].best_tile_inner = tempEval[28]+desert_buff; 
-				majList[i].best_tile_inner_2 = tempEval[29]+desert_buff;
+				majList[i].best_tile_inner = _tempEval[28]+desert_buff; 
+				majList[i].best_tile_inner_2 = _tempEval[29]+desert_buff;
 				end				
-				if (majList[i].civ == "CIVILIZATION_MAORI" ) and tempEval[14] > 4 then
+				if (majList[i].civ == "CIVILIZATION_MAORI" ) and _tempEval[14] > 4 then
 				-- Maori if on water
 				--	Ring 1 like a 2:2
 				majList[i].best_tile = maori_sea;
@@ -3205,6 +3205,11 @@ function Terraforming_Best_Refresh(majList,major_count,step,bHighRoll)
 				majList[i].best_tile_inner = maori_sea; 
 				majList[i].best_tile_inner_2 = maori_sea;
 				end
+				majList[i].bestTiles1Ring1_index = _tempEval[32];
+				majList[i].bestTiles1Ring2_index = _tempEval[33];
+				majList[i].bestTiles2Ring1_index = _tempEval[34];
+				majList[i].bestTiles2Ring2_index = _tempEval[35];
+				majList[i].bestTiles1Ring3_index = _tempEval[37];			
 				__Debug(majList[i].civ ,"S1-S2-S3-I1-I2:", majList[i].best_tile,"(",majList[i].bestTiles1Ring1_index,")",majList[i].best_tile_2,"(",majList[i].bestTiles1Ring2_index,")",majList[i].best_tile_3,"(",majList[i].bestTiles1Ring3_index,")",majList[i].best_tile_inner,"(",majList[i].bestTiles2Ring1_index,")",majList[i].best_tile_inner_2,"(",majList[i].bestTiles2Ring2_index,") - 2:2 Base?",majList[i].isBase22)
 				-- Best yield first ring
 				if majList[i].best_tile > max_best_tile_1 then
