@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	BBS_AssignStartingPlot.lua    -- 1.5.8
+--	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.0
 --	AUTHOR:  D. / Jack The Narrator, Kilua
 --	PURPOSE: Custom Spawn Placement Script
 ------------------------------------------------------------------------------
@@ -821,7 +821,7 @@ end
 function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, region_index, civilizationType,iPlayer)
     local ratedPlots = {};
 	local region_bonus = 0
-	 local gridWidth, gridHeight = Map.GetGridSize();
+	local gridWidth, gridHeight = Map.GetGridSize();
 
 	
     for i, plot in ipairs(startPlots) do
@@ -831,9 +831,24 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 		local foundBiasNordic = false;
 		local foundBiasFloodPlains = false;
 		local foundBiasCoast = false;
+		local bskip = false
         ratedPlot.Plot = plot;
         ratedPlot.Score = 0 + region_bonus;
         ratedPlot.Index = i;
+		----------------------
+		-- Shortcut let's not waste checking if they player would be too close anyway...
+		----------------------
+		if (major == true) then
+			if Players[iPlayer] ~= nil then
+				if self:__MajorMajorCivBufferCheck(plot,Players[iPlayer]:GetTeam()) == false then
+					ratedPlot.Score = ratedPlot.Score - 2000;
+					bskip = true
+				end
+			end	
+		end
+		
+		if 	bskip == false then
+		
         if (biases ~= nil) then
             for j, bias in ipairs(biases) do
                 __Debug("Rate Plot:", plot:GetX(), ":", plot:GetY(), "For Bias :", bias.Type, "value :", bias.Value,"Civ",civilizationType, "Base", ratedPlot.Score);
@@ -1207,29 +1222,34 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 				end	
 				
 			end
-		end
-
-					local impassable = 0
-					for direction = 0, 5, 1 do
-						local adjacentPlot = Map.GetAdjacentPlot(ratedPlot.Plot:GetX(), ratedPlot.Plot:GetY(), direction);
-						if (adjacentPlot ~= nil) then
-							if(adjacentPlot:GetX() >= 0 and adjacentPlot:GetY() < gridHeight) then
+			
+			
+		local impassable = 0
+		for direction = 0, 5, 1 do
+			local adjacentPlot = Map.GetAdjacentPlot(ratedPlot.Plot:GetX(), ratedPlot.Plot:GetY(), direction);
+			if (adjacentPlot ~= nil) then
+				if(adjacentPlot:GetX() >= 0 and adjacentPlot:GetY() < gridHeight) then
 							-- Checks to see if the plot is impassable
-								if(adjacentPlot:IsImpassable()) then
-									impassable = impassable + 1;
-								end
-								else
-								impassable = impassable + 1;
-							end
-						end
+					if(adjacentPlot:IsImpassable()) then
+						impassable = impassable + 1;
 					end
-					if impassable > 2 then
-						ratedPlot.Score = ratedPlot.Score - ( 250 * impassable )
-						__Debug("Impassable Check", ratedPlot.Score, impassable);	
-					end
-
-
-
+				else
+					impassable = impassable + 1;
+				end
+			end
+		end
+		if impassable > 2 then
+			ratedPlot.Score = ratedPlot.Score - ( 250 * impassable )
+			__Debug("Impassable Check", ratedPlot.Score, impassable);	
+		end
+	
+			
+		if Players[iPlayer] ~= nil then
+			if self:__MajorMajorCivBufferCheck(plot,Players[iPlayer]:GetTeam()) == false then
+				ratedPlot.Score = ratedPlot.Score - 2000;
+			end
+		end	
+			
 		if (plot:GetFeatureType() == g_FEATURE_OASIS) then
 			ratedPlot.Score = ratedPlot.Score - 250;
 		end
@@ -1239,23 +1259,106 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 			ratedPlot.Score = ratedPlot.Score - 500;
 		end
 		__Debug("Fresh WAter Check", ratedPlot.Score);	
+		
+		end
+
 		if ratedPlot.Plot:IsRiver() then
 			ratedPlot.Score = ratedPlot.Score + 25
 		end
 		__Debug("River Check", ratedPlot.Score);	
 
-		if Players[iPlayer] ~= nil then
-			if self:__MajorMajorCivBufferCheck(plot,Players[iPlayer]:GetTeam()) == false then
-				ratedPlot.Score = ratedPlot.Score - 2000;
+		-- Region check
+
+		if ratedPlot.Score > 0 then
+			region_bonus = 0
+			local count_water = 0
+			local count_22 = 0
+			for k = 1, 90 do
+				local scanPlot = GetAdjacentTiles(ratedPlot.Plot, k)
+				if scanPlot ~= nil then
+				
+					if scanPlot:IsNaturalWonder() then
+						region_bonus = region_bonus + 100
+					end
+
+					if (scanPlot:GetTerrainType() == g_TERRAIN_TYPE_TUNDRA or scanPlot:GetTerrainType() == g_TERRAIN_TYPE_TUNDRA_HILLS) then
+					
+						if foundBiasToundra == true then
+						
+							region_bonus = region_bonus + 50
+							
+							else
+							
+							region_bonus = region_bonus - 50
+							
+						end
+					
+					end
+					
+					if (scanPlot:GetTerrainType() ==  g_TERRAIN_TYPE_DESERT or scanPlot:GetTerrainType() ==  g_TERRAIN_TYPE_DESERT_HILLS) then
+					
+						if foundBiasDesert == true then
+						
+							region_bonus = region_bonus + 50
+							
+							else
+							
+							region_bonus = region_bonus - 50
+							
+						end
+					
+					end
+					
+					if (scanPlot:IsWater() == true and scanPlot:IsFreshWater() == false and landMap == true) then
+						count_water = count_water + 1
+						
+						if foundBiasCoast == false then
+						
+							region_bonus = region_bonus - 50
+														
+						end
+										
+					end
+					
+					if ( (scanPlot:GetTerrainType() ==  g_TERRAIN_TYPE_GRASS_HILLS and scanPlot:GetFeatureType() ==  3 ) or (scanPlot:GetTerrainType() ==  g_TERRAIN_TYPE_PLAINS_HILLS and scanPlot:GetFeatureType() ==  2 ) ) then
+							
+						count_22 = count_22 + 1	
+					
+					end
+					
+				end
+
+			end	
+			
+			if count_22 > 4 then
+				region_bonus = region_bonus + 250
+				
+				elseif foundBiasDesert or foundBiasToundra then
+				region_bonus = region_bonus
+				elseif count_22 < 2 then
+				region_bonus = region_bonus - 250
 			end
+			
+			if count_water > 20 and landMap == true and foundBiasCoast == false then
+				region_bonus = region_bonus - 250
+				elseif count_water > 45 and landMap == true and foundBiasCoast == true then
+				region_bonus = region_bonus - 250
+			end
+		
 		end
 		
-		__Debug("Buffer Check", ratedPlot.Score);	
+		ratedPlot.Score = ratedPlot.Score + region_bonus
+
 		ratedPlot.Score = math.floor(ratedPlot.Score);
-        __Debug("Plot :", plot:GetX(), ":", plot:GetY(), "Score :", ratedPlot.Score, "North Biased:",b_north_biased, "Type:",plot:GetTerrainType());
-		if Players[iPlayer] ~= nil and major then
+        __Debug("Plot :", plot:GetX(), ":", plot:GetY(), "Score :", ratedPlot.Score, "North Biased:",b_north_biased, "Type:",plot:GetTerrainType(),"Region",region_bonus);
+		if Players[iPlayer] ~= nil then
 			__Debug("Plot :", plot:GetX(), ":", plot:GetY(), "Region:",region_index,"Score :", ratedPlot.Score, "Civilization:",civilizationType, "Team",Players[iPlayer]:GetTeam(),"Type:",plot:GetTerrainType());
 		end
+		
+		end
+		
+		-- Shortcut end
+		
 		table.insert(ratedPlots, ratedPlot);
 
     end

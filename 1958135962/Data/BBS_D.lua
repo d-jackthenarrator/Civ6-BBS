@@ -493,8 +493,7 @@ function Init_D_Balance()
 	if ( Game:GetProperty("BBS_INIT_COUNT") ) > 1 then
 		print ("Init: ", Game:GetProperty("BBS_INIT_COUNT")," times.")
 	end
-	
-	
+
 end
 
 

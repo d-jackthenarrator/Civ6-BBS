@@ -40,6 +40,7 @@ end
 -------------------------------------------------------------------------------
 function GenerateMap()
 	print("Generating Continents Map");
+
 	local pPlot;
 
 	-- Set globals
