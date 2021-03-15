@@ -136,7 +136,7 @@ function BBS_AssignStartingPlots.Create(args)
 		bError_major = false;
 		bError_proximity = false;
 		bError_minor = false;
-		__Debug("Attempt #",i,"Distance",Major_Distance_Target)
+		print("Attempt #",i,"Distance",Major_Distance_Target)
 	instance  = {
         -- Core Process member methods
         __InitStartingData					= BBS_AssignStartingPlots.__InitStartingData,
@@ -233,10 +233,11 @@ function BBS_AssignStartingPlots.Create(args)
 			Game:SetProperty("BBS_RESPAWN",true)
 			return instance
 			else
-			Major_Distance_Target = Major_Distance_Target - 1
+			Major_Distance_Target = Major_Distance_Target - 2
+			bRepeatPlacement = true			  
 			if Major_Distance_Target < 9 then
 				Major_Distance_Target = 9
-				bRepeatPlacement = true
+
 			end
 		end
 	end
@@ -552,27 +553,24 @@ function BBS_AssignStartingPlots:__SetStartBias(startPlots, iNumberCiv, playersL
         end
         table.insert(civs, civ);
     end
-    for i = 1, self.tierMax + 1 do
-        tierOrder = {};
-        for j, civ in ipairs(civs) do
-            if (civ.Tier == i) then
-                table.insert(tierOrder, civ);
-            end
-        end
-        local shuffledCiv = GetShuffledCopyOfTable(tierOrder);
-		if bRepeatPlacement == true then
-			if self.iHard_Major ~= nil then
-				__Debug("Reshuffling Civ Order")
-				shuffledCiv = self:__GetShuffledCiv(tierOrder,self.iHard_Major);
-				else
-				__Debug("Error: Hard Major Limit ")
-			end
+		
+	local shuffledCiv = GetShuffledCopyOfTable(civs);
+	
+	if bRepeatPlacement == true then
+		if self.iHard_Major ~= nil then
+			__Debug("Reshuffling Civ Order")
+			shuffledCiv = self:__GetShuffledCiv(civs,self.iHard_Major);
+			else
+			__Debug("Error: Hard Major Limit ")
+	  
 		end
-        for k, civ in ipairs(shuffledCiv) do
-            __Debug("SetStartBias for", civ.Type);
-			__Debug("SetStartBias for", civ.Type,playersList[civ.Index]);
-            self:__BiasRoutine(civ.Type, startPlots, civ.Index, playersList, major, false);
-        end
+	end
+	
+	
+    for k, civ in ipairs(shuffledCiv) do
+		__Debug("SetStartBias for", k, civ.Type,playersList[civ.Index]);
+        self:__BiasRoutine(civ.Type, startPlots, civ.Index, playersList, major);
+		__Debug("SetStartBias for", k, civ.Type, "Completed");
     end
 end
 ------------------------------------------------------------------------------
