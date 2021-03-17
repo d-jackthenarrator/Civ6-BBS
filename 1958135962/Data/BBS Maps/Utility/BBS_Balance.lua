@@ -139,6 +139,7 @@ function BBS_Script()
 		world_age = MapConfiguration.GetValue("world_age");
 		local ridge = MapConfiguration.GetValue("BBSRidge");
 		print ("Init: Map Size: ", mapSize, "2 = Small, 5 = Huge");
+		print ("Context",GameConfiguration.IsAnyMultiplayer())
 		local gridWidth, gridHeight = Map.GetGridSize();
 		print ("Init: gridWidth",gridWidth,"gridHeight",gridHeight)
 		print ("Init: Climate: ", startTemp, "1 = Hot, 2 = Standard, 3 = Cold");
@@ -506,12 +507,12 @@ function BBS_Script()
 				if (majList[i] ~= nil) then
 					if(majList[i].leader ~= "LEADER_SPECTATOR"  ) then
 						-- Check for Tundra Starts
-						if ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 6 and IsTundraCiv(majList[i].civ) == false ) then
+						if ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 6 and IsTundraCiv(majList[i].civ) == false ) or ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 2 and (majList[i].water_start + majList[i].water_inner + majList[i].water_outer) > 4 and IsTundraCiv(majList[i].civ) == false ) then
 							__Debug("Terraforming Polar Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
 							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
 						end
 						
-						if ( (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start) > 6 and IsDesertCiv(majList[i].civ) == false ) then
+						if ( (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start) > 6 and IsDesertCiv(majList[i].civ) == false ) or ( (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start) > 2  and (majList[i].water_start + majList[i].water_inner + majList[i].water_outer) > 4 and IsDesertCiv(majList[i].civ) == false ) then
 							if( IsTundraCiv(majList[i].civ) == true ) then 
 							__Debug("Terraforming Desert Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
 							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,1);
