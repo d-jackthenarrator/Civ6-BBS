@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	 BBS_Balance.lua 1.5.8
+--	FILE:	 BBS_Balance.lua 1.6.0
 --	AUTHOR:  D. / Jack The Narrator, 57Fan
 --	PURPOSE: Rebalance the map spawn post placement 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3318,6 +3318,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 		end
 	end
 	
+	table.sort (target_tiles, function(a, b) return a.yield > b.yield; end);
 	--------------------------------------------------------------------------------------------------------------
 	-- Step: 1: Rebalancing Best Plot: Adding  More Plots --------------------------------------------------------
 	--------------------------------------------------------------------------------------------------------------
@@ -4133,7 +4134,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 		return
 	end
 
-	for i = 3, 4 do
+	for i = 0, 2 do
 		__Debug("Terraforming Best: ", i, remaining_amount);
 		if remaining_amount > -1 then
 			break
@@ -4148,9 +4149,17 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 			local placed_yield = 0
 			
 			if  target_tiles[i].yield > 5.25 then
-				target_yield = 5
+				if remaining_amount < -2 then
+					target_yield = 4.5
+					else
+					target_yield = 5
+				end
 				elseif target_tiles[i].yield > 4.5 then
-				target_yield = 4.5
+				if remaining_amount < -1.5 then
+					target_yield = 4
+					else
+					target_yield = 4.5
+				end
 				else
 				target_yield = -1
 			end
@@ -4208,7 +4217,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							
 						end
 
-						else -- yield below 4.75
+						elseif target_yield > 4.25 then -- yield below 4.75
 						
 						-- Hill with Sheep
 						TerrainBuilder.SetTerrainType(target_plot_1,1);
@@ -4217,6 +4226,14 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 						ResourceBuilder.SetResourceType(target_plot_1, 7, 1)
 						__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 3/1 Sheep Grassland Hill");
 						placed_yield = 4.5
+						
+						else
+						
+						TerrainBuilder.SetTerrainType(target_plot_1,1);
+						TerrainBuilder.SetFeatureType(target_plot_1,-1);
+						ResourceBuilder.SetResourceType(target_plot_1, -1);
+						__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/1 Grassland Hill");
+						placed_yield = 3.5						
 
 					end -- close target if
 						
@@ -4279,7 +4296,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							end
 						end						
 							
-						else -- yield < 4.75
+						elseif target_yield > 4.25 then -- yield < 4.75
 							
 							-- Banana Jungle Hill
 						if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
@@ -4300,6 +4317,17 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Forested Plain with Deer");
 								placed_yield = 5
 						end
+						
+						else
+						
+
+						-- Forested Plain Hill
+						TerrainBuilder.SetTerrainType(target_plot_1,4);
+						TerrainBuilder.SetFeatureType(target_plot_1,-1);
+						ResourceBuilder.SetResourceType(target_plot_1, -1);
+						__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/2 Plain Hills");
+						placed_yield = 3
+
 
 							
 					end -- close target
@@ -4414,7 +4442,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 	end
 	
 	
-	for i = 0, 2 do
+	for i = 3, 4 do
 		__Debug("Terraforming Best: ", i, remaining_amount);
 		if remaining_amount > -1 then
 			break
