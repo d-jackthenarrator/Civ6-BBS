@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	 BBS_Balance.lua 1.5.8
+--	FILE:	 BBS_Balance.lua 1.6.0
 --	AUTHOR:  D. / Jack The Narrator, 57Fan
 --	PURPOSE: Rebalance the map spawn post placement 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -139,6 +139,7 @@ function BBS_Script()
 		world_age = MapConfiguration.GetValue("world_age");
 		local ridge = MapConfiguration.GetValue("BBSRidge");
 		print ("Init: Map Size: ", mapSize, "2 = Small, 5 = Huge");
+		print ("Context",GameConfiguration.IsAnyMultiplayer())
 		local gridWidth, gridHeight = Map.GetGridSize();
 		print ("Init: gridWidth",gridWidth,"gridHeight",gridHeight)
 		print ("Init: Climate: ", startTemp, "1 = Hot, 2 = Standard, 3 = Cold");
@@ -428,7 +429,7 @@ function BBS_Script()
 
         for i = 1, major_count do
 			if major_table[i] ~= nil then
-				if Players[major_table[i]] ~= nil then
+				if Players[major_table[i]] ~= nil and Players[major_table[i]]:GetTeam() ~= nil and majList[i] ~= nil then
 					print("Player ID:", major_table[i], " Team:", Players[major_table[i]]:GetTeam(), majList[i].civ, majList[i].leader);
 					else
 					print("Error:",i,major_table[i],"Missing Player")
@@ -506,14 +507,19 @@ function BBS_Script()
 				if (majList[i] ~= nil) then
 					if(majList[i].leader ~= "LEADER_SPECTATOR"  ) then
 						-- Check for Tundra Starts
-						if ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 6 and IsTundraCiv(majList[i].civ) == false ) then
+						if ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 6 and IsTundraCiv(majList[i].civ) == false ) or ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 2 and (majList[i].water_start + majList[i].water_inner + majList[i].water_outer) > 4 and IsTundraCiv(majList[i].civ) == false ) then
 							__Debug("Terraforming Polar Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
 							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
 						end
 						
-						if ( (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start) > 6 and IsDesertCiv(majList[i].civ) == false ) then
+						if ( (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start) > 6 and IsDesertCiv(majList[i].civ) == false ) or ( (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start) > 2  and (majList[i].water_start + majList[i].water_inner + majList[i].water_outer) > 4 and IsDesertCiv(majList[i].civ) == false ) then
+							if( IsTundraCiv(majList[i].civ) == true ) then 
+							__Debug("Terraforming Desert Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
+							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,1);
+							else
 							__Debug("Terraforming Desert Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
 							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
+							end
 						end
 						
 
@@ -3318,6 +3324,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 		end
 	end
 	
+	table.sort (target_tiles, function(a, b) return a.yield > b.yield; end);
 	--------------------------------------------------------------------------------------------------------------
 	-- Step: 1: Rebalancing Best Plot: Adding  More Plots --------------------------------------------------------
 	--------------------------------------------------------------------------------------------------------------
@@ -4133,7 +4140,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 		return
 	end
 
-	for i = 3, 4 do
+	for i = 0, 2 do
 		__Debug("Terraforming Best: ", i, remaining_amount);
 		if remaining_amount > -1 then
 			break
@@ -4148,9 +4155,17 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 			local placed_yield = 0
 			
 			if  target_tiles[i].yield > 5.25 then
-				target_yield = 5
+				if remaining_amount < -2 then
+					target_yield = 4.5
+					else
+					target_yield = 5
+				end
 				elseif target_tiles[i].yield > 4.5 then
-				target_yield = 4.5
+				if remaining_amount < -1.5 then
+					target_yield = 4
+					else
+					target_yield = 4.5
+				end
 				else
 				target_yield = -1
 			end
@@ -4208,7 +4223,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							
 						end
 
-						else -- yield below 4.75
+						elseif target_yield > 4.25 then -- yield below 4.75
 						
 						-- Hill with Sheep
 						TerrainBuilder.SetTerrainType(target_plot_1,1);
@@ -4217,6 +4232,14 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 						ResourceBuilder.SetResourceType(target_plot_1, 7, 1)
 						__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 3/1 Sheep Grassland Hill");
 						placed_yield = 4.5
+						
+						else
+						
+						TerrainBuilder.SetTerrainType(target_plot_1,1);
+						TerrainBuilder.SetFeatureType(target_plot_1,-1);
+						ResourceBuilder.SetResourceType(target_plot_1, -1);
+						__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/1 Grassland Hill");
+						placed_yield = 3.5						
 
 					end -- close target if
 						
@@ -4279,7 +4302,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							end
 						end						
 							
-						else -- yield < 4.75
+						elseif target_yield > 4.25 then -- yield < 4.75
 							
 							-- Banana Jungle Hill
 						if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
@@ -4300,6 +4323,17 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Forested Plain with Deer");
 								placed_yield = 5
 						end
+						
+						else
+						
+
+						-- Forested Plain Hill
+						TerrainBuilder.SetTerrainType(target_plot_1,4);
+						TerrainBuilder.SetFeatureType(target_plot_1,-1);
+						ResourceBuilder.SetResourceType(target_plot_1, -1);
+						__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/2 Plain Hills");
+						placed_yield = 3
+
 
 							
 					end -- close target
@@ -4414,7 +4448,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 	end
 	
 	
-	for i = 0, 2 do
+	for i = 3, 4 do
 		__Debug("Terraforming Best: ", i, remaining_amount);
 		if remaining_amount > -1 then
 			break

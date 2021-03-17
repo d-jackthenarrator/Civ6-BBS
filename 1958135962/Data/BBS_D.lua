@@ -285,6 +285,10 @@ include "MapEnums"
 -- 1.5.9
 --		Fixed an index error sometimes leading for a tile to be changed twice
 --		No more load confirmation in PBC and Hotseat
+-- 1.6
+--		Introduced regional score
+--		Fixed Kilimanjaro
+--		Adjusted the yield targeting (start from the highest yield, favour less changes)
 
 
 
@@ -302,7 +306,7 @@ include "MapEnums"
 --	Run spawn correction Coastal (failsafe to prevent harbor blocked by reefs) 
 --	Run Choke point analysis (prevent crashes)
 
-g_version = "1.5.9"
+g_version = "1.6.0"
 
 -----------------------------------------------------------------------------
 function __Debug(...)
@@ -493,8 +497,7 @@ function Init_D_Balance()
 	if ( Game:GetProperty("BBS_INIT_COUNT") ) > 1 then
 		print ("Init: ", Game:GetProperty("BBS_INIT_COUNT")," times.")
 	end
-	
-	
+
 end
 
 

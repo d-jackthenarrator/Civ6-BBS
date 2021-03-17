@@ -1,4 +1,4 @@
-local g_version = "1.5"
+local g_version = "1.6"
 
 -------------------------------------------------------------------------------
 print("-------------- BBS UI v"..g_version.." -D- Init --------------")
@@ -23,10 +23,10 @@ function OnLoadScreenClose()
 				print(Game:GetProperty("BBS_SAFE_MODE"))
 				if (Game:GetProperty("BBS_SAFE_MODE") == true) then
 				--OnStatusMessage( "BBS "..g_version.." Loaded succesfully! (Firaxis Placement)", 180, ReportingStatusTypes.DEFAULT )
-				NotificationManager.SendNotification(Players[Game.GetLocalPlayer()], NotificationTypes.USER_DEFINED_1,  "BBS "..g_version.." Loaded succesfully! (Firaxis Placement)")
+				NotificationManager.SendNotification(Players[Game.GetLocalPlayer()], NotificationTypes.USER_DEFINED_1,  "BBS "..g_version.." Loaded succesfully!")
 				else
 				--OnStatusMessage( "BBS "..g_version.." Loaded succesfully! (BBS Placement)", 180, ReportingStatusTypes.DEFAULT )
-				NotificationManager.SendNotification(Players[Game.GetLocalPlayer()], NotificationTypes.USER_DEFINED_1, "BBS "..g_version.." Loaded succesfully! (BBS Placement)")
+				NotificationManager.SendNotification(Players[Game.GetLocalPlayer()], NotificationTypes.USER_DEFINED_1, "BBS "..g_version.." Loaded succesfully!")
 				end
 			end
 			if (Game:GetProperty("BBS_MINOR_FAILING_TOTAL") ~= nil) then
