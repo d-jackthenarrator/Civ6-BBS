@@ -566,9 +566,10 @@ function BBS_AssignStartingPlots:__SetStartBias(startPlots, iNumberCiv, playersL
 		end
 	end
 	
+	table.sort (shuffledCiv, function(a, b) return a.Tier < b.Tier; end);
 	
     for k, civ in ipairs(shuffledCiv) do
-		___Debug("SetStartBias for", k, civ.Type,playersList[civ.Index]);
+		___Debug("SetStartBias for", k, civ.Type,playersList[civ.Index], civ.Tier);
         self:__BiasRoutine(civ.Type, startPlots, civ.Index, playersList, major);
 		___Debug("SetStartBias for", k, civ.Type, "Completed");
     end
@@ -768,7 +769,7 @@ function BBS_AssignStartingPlots:__SettlePlot(ratedBiases, index, player, major,
                 if (self:__MajorMajorCivBufferCheck(ratedBias.Plot,player:GetTeam())) then
                     ___Debug("Settled plot :", ratedBias.Plot:GetX(), ":", ratedBias.Plot:GetY(), "Score :", ratedBias.Score, "Player:",player:GetID(),"Region:",regionIndex);
 					print("Settled Score :", ratedBias.Score, "Player:",player:GetID(),"Region:",regionIndex)
-					if ratedBias.Score < - 500 then
+					if ratedBias.Score < - 250 then
 						bError_shit_settle = true
 					end
                     settled = true;
@@ -1321,12 +1322,16 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 					
 					end
 					
-					if (scanPlot:IsWater() == true and scanPlot:IsFreshWater() == false and landMap == true) then
+					if (scanPlot:GetTerrainType() ==  16 and scanPlot:IsFreshWater() == false and landMap == true) then
 						count_water = count_water + 1
 						
 						if foundBiasCoast == false then
 						
 							region_bonus = region_bonus - 50
+							
+							else
+							
+							region_bonus = region_bonus + 50
 														
 						end
 										
