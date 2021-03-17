@@ -769,7 +769,7 @@ function BBS_AssignStartingPlots:__SettlePlot(ratedBiases, index, player, major,
                 if (self:__MajorMajorCivBufferCheck(ratedBias.Plot,player:GetTeam())) then
                     ___Debug("Settled plot :", ratedBias.Plot:GetX(), ":", ratedBias.Plot:GetY(), "Score :", ratedBias.Score, "Player:",player:GetID(),"Region:",regionIndex);
 					print("Settled Score :", ratedBias.Score, "Player:",player:GetID(),"Region:",regionIndex)
-					if ratedBias.Score < - 250 then
+					if ratedBias.Score < - 400 then
 						bError_shit_settle = true
 					end
                     settled = true;
@@ -1353,7 +1353,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 				elseif foundBiasDesert or foundBiasToundra then
 				region_bonus = region_bonus
 				elseif count_22 < 2 then
-				region_bonus = region_bonus - 250
+				region_bonus = region_bonus - 50
 			end
 			
 			if count_water > 20 and landMap == true and foundBiasCoast == false then
