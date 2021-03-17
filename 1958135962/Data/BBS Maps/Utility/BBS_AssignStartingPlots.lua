@@ -1307,6 +1307,20 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 					
 					end
 					
+					if (scanPlot:GetFeatureType() == g_FEATURE_FLOODPLAINS or scanPlot:GetFeatureType() == g_FEATURE_FLOODPLAINS_PLAINS or scanPlot:GetFeatureType() == g_FEATURE_FLOODPLAINS_GRASSLAND ) then
+					
+						if foundBiasFloodPlains == true or civilizationType == "CIVILIZATION_SUMERIA" or civilizationType == "CIVILIZATION_MALI" or civilizationType == "CIVILIZATION_NUBIA" or civilizationType == "CIVILIZATION_BABYLON" or civilizationType == "CIVILIZATION_EGYPT" then
+						
+							region_bonus = region_bonus + 5
+							
+							else
+							
+							region_bonus = region_bonus - 50
+							
+						end
+					
+					end
+					
 					if (scanPlot:IsWater() == true and scanPlot:IsFreshWater() == false and landMap == true) then
 						count_water = count_water + 1
 						
