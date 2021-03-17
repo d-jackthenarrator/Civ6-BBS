@@ -513,11 +513,7 @@ function BBS_Script()
 						
 						if ( (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start) > 6 and IsDesertCiv(majList[i].civ) == false ) then
 							__Debug("Terraforming Desert Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
-                     if( IsTundraCiv(majList[i].civ) == true ) then 
-                        Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,1);
-                     else
-                        Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
-                     end
+							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
 						end
 						
 
