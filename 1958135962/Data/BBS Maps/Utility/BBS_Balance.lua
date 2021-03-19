@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	 BBS_Balance.lua 1.6.0
+--	FILE:	 BBS_Balance.lua 1.6.1
 --	AUTHOR:  D. / Jack The Narrator, 57Fan
 --	PURPOSE: Rebalance the map spawn post placement 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ local COASTAL_LEADERS = {"LEADER_VICTORIA", "LEADER_HOJO", "LEADER_DIDO"};
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function BBS_Script()
-	print ("Initialization", os.date("%c"))
+	print ("Initialization Balancing Spawn", os.date("%c"))
 	
 	local currentTurn = Game.GetCurrentGameTurn();
 	eContinents	= {};
