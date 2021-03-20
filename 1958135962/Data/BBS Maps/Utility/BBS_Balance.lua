@@ -522,6 +522,11 @@ function BBS_Script()
 							end
 						end
 						
+						if (IsDesertCiv(majList[i].civ) == false) and ( IsTundraCiv(majList[i].civ) == false ) and (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start + majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 4  then
+							__Debug("Terraforming Mixed Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
+							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
+						end
+
 
 						if( IsDesertCiv(majList[i].civ) == true) then -- Now forces to Terraform Mali to counterbalance the lower amount of deserts on the map
 							__Debug("Mali Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);

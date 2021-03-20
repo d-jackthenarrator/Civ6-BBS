@@ -823,6 +823,7 @@ function BBS_AssignStartingPlots:__SettlePlot(ratedBiases, index, player, major,
                     ___Debug("Settled plot :", ratedBias.Plot:GetX(), ":", ratedBias.Plot:GetY(), "Score :", ratedBias.Score, "Player:",player:GetID(),"Region:",regionIndex);
 					print("Settled Score :", ratedBias.Score.." ("..ratedBias.Region..")", "Player:",player:GetID(),"Region:",regionIndex, os.date("%c"))
 					if ratedBias.Score < - 600 then
+						print("X :", ratedBias.Plot:GetX(), "Y:",ratedBias.Plot:GetY(),"Region:",regionIndex)
 						bError_shit_settle = true
 					end
                     settled = true;
@@ -1331,7 +1332,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 							
 							else
 							
-							region_bonus = region_bonus - 50
+							region_bonus = region_bonus - 10
 							
 						end
 					
@@ -1345,7 +1346,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 							
 							else
 							
-							region_bonus = region_bonus - 50
+							region_bonus = region_bonus - 10
 							
 						end
 					
@@ -1359,7 +1360,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 							
 							else
 							
-							region_bonus = region_bonus - 50
+							region_bonus = region_bonus - 10
 							
 						end
 					
@@ -1370,7 +1371,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 						
 						if foundBiasCoast == false then
 						
-							region_bonus = region_bonus - 50
+							region_bonus = region_bonus - 10
 							
 							else
 							

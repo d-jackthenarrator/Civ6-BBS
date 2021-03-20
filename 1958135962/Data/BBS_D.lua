@@ -434,7 +434,6 @@ function Init_D_Balance()
 	print ("---------------------------------------------------------");
 	print ("------------- BBS Script v"..g_version.." -D- Init -------------");
 	print ("---------------------------------------------------------");
-
 	if (Game:GetProperty("BBS_INIT_COUNT") == nil) then
 		Game:SetProperty("BBS_INIT_COUNT",1)
 		Clean()
