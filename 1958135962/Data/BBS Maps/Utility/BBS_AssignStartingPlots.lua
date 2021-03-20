@@ -857,7 +857,7 @@ function BBS_AssignStartingPlots:__SettlePlot(ratedBiases, index, player, major,
                 self.playerStarts[index] = {};
                     ___Debug("Settled plot :", ratedBias.Plot:GetX(), ":", ratedBias.Plot:GetY(), "Score :", ratedBias.Score, "Player:",player:GetID(),"Region:",regionIndex);
 					print("Settled Score :", ratedBias.Score.." ("..ratedBias.Region..")", "Player:",player:GetID(),"Region:",regionIndex, os.date("%c"))
-					if ratedBias.Score < - 600 then
+					if ratedBias.Score < - 1000 then
 						print("X :", ratedBias.Plot:GetX(), "Y:",ratedBias.Plot:GetY(),"Region:",regionIndex)
 						bError_shit_settle = true
 					end
@@ -1347,7 +1347,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 
 		-- Region check
 
-		if ratedPlot.Score > -250 then
+		if ratedPlot.Score > -500 then
 			region_bonus = 0
 			local count_water = 0
 			local count_22 = 0
@@ -1423,8 +1423,8 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 					end
 					
 				end
-				if region_bonus < -100 then
-					region_bonus = math.max(-250,region_bonus)
+				if region_bonus < -250 then
+					region_bonus = math.max(-500,region_bonus)
 					break
 				end
 				if region_bonus > 500 then
@@ -1442,7 +1442,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 			end
 			
 			if count_water > 20 and landMap == true and foundBiasCoast == false then
-				region_bonus = region_bonus - 250
+				region_bonus = region_bonus - 100
 				elseif count_water > 45 and landMap == true and foundBiasCoast == true then
 				region_bonus = region_bonus - 250
 			end
