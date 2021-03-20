@@ -3,6 +3,7 @@
 --	AUTHOR:  D. / Jack The Narrator
 --	PURPOSE: Gameplay script - Rebalance the map for CPL requirements
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ExposedMembers.LuaEvents = LuaEvents
 
 include "MapEnums"

@@ -85,9 +85,6 @@ function BBS_Script()
 	local currentTurn = Game.GetCurrentGameTurn();
 	eContinents	= {};
 	
-
-
-
 	
 
 -- =============================================================================
@@ -990,15 +987,17 @@ function BBS_Script()
       -- Minimal naval score, under which one civ cannot go under (with luxuries for exemple)
       local minNavalScore = 0;
       for i = 1, major_count do
+		if (majList[i] ~= nil and majList[i].leader ~= "LEADER_SPECTATOR") then
 			if (majList[i].isFullCoastal == true) then
-            __Debug("Leader:", majList[i].leader, " score:", majList[i].coastalScore);
-            __Debug("Leader:", majList[i].leader, " MIN score:", majList[i].minCoastalScore);
-            navalCivsCount = navalCivsCount + 1;
-            totalcoastalScore = totalcoastalScore + majList[i].coastalScore;
-            if (majList[i].minCoastalScore > minNavalScore) then
-               minNavalScore = majList[i].minCoastalScore;
-            end
-         end
+				__Debug("Leader:", majList[i].leader, " score:", majList[i].coastalScore);
+				__Debug("Leader:", majList[i].leader, " MIN score:", majList[i].minCoastalScore);
+				navalCivsCount = navalCivsCount + 1;
+				totalcoastalScore = totalcoastalScore + majList[i].coastalScore;
+				if (majList[i].minCoastalScore > minNavalScore) then
+					minNavalScore = majList[i].minCoastalScore;
+				end
+			end
+		 end
       end
       
       
@@ -1036,6 +1035,7 @@ function BBS_Script()
       -------
       
       for i = 1, major_count do
+		if (majList[i] ~= nil and majList[i].leader ~= "LEADER_SPECTATOR") then
 			if (majList[i].isFullCoastal == true) then
             __Debug("--------------");
             __Debug("Adjusting naval score of:", majList[i].leader);
@@ -1043,6 +1043,7 @@ function BBS_Script()
             adjustCoastal(majList[i], aimedNavalScore, COASTAL_MARGIN);
             __Debug("Score after balancing:", majList[i].coastalScore);
          end
+		 end
       end
 
       __Debug("---");
@@ -1525,7 +1526,7 @@ function BBS_Script()
 		else
 		print ("BBS Script - Completed - Debug", os.date("%c") );
 		end -- Debug Balancing
-		
+
 		-- Gemedon's input to limit crash
 		TerrainBuilder.AnalyzeChokepoints()
 		-- Coast -> Lake
@@ -1543,7 +1544,7 @@ function BBS_Script()
 				end
 			end
 		end
-		
+		print ("BBS Script - Completed", os.date("%c") );
 	else
 		__Debug("D TURN STARTING: Any other turn");
 

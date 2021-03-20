@@ -421,7 +421,7 @@ function BBS_AssignStartingPlots:__InitStartingData()
 				if (startPlot == nil) then
 					bError_major = true
 					--___Debug("Error Major Player is missing:", tempMajorList[i]);
-					___Debug("Error Major Player is missing:", tempMajorList[i]);
+					print("Error Major Player is missing:", tempMajorList[i]);
 				else
 					___Debug("Major Start X: ", startPlot:GetX(), "Major Start Y: ", startPlot:GetY(), "ID:",tempMajorList[i]);
 				end
@@ -432,11 +432,12 @@ function BBS_AssignStartingPlots:__InitStartingData()
 			print("Some Major Score are too low",bError_shit_settle)
 	
 		end
-	
+		local majorSpawnsList = {}
 		if (bError_major ~= true) and bError_shit_settle == false then
 			for i = 1, PlayerManager.GetAliveMajorsCount() do
 				if (PlayerConfigurations[tempMajorList[i]]:GetLeaderTypeName() ~= "LEADER_SPECTATOR" and PlayerConfigurations[tempMajorList[i]]:GetLeaderTypeName() ~= "LEADER_KUPE") then
 					local pStartPlot_i = Players[tempMajorList[i]]:GetStartingPlot()
+					table.insert(majorSpawnsList, pStartPlot_i)
 					if (pStartPlot_i ~= nil) then
 						for j = 1, PlayerManager.GetAliveMajorsCount() do
 							if (PlayerConfigurations[j]:GetLeaderTypeName() ~= "LEADER_SPECTATOR" and PlayerConfigurations[tempMajorList[j]]:GetLeaderTypeName() ~= "LEADER_KUPE" and tempMajorList[i] ~= tempMajorList[j]) then
@@ -487,27 +488,61 @@ function BBS_AssignStartingPlots:__InitStartingData()
 
 
 
-
+			local tempMinorList = PlayerManager.GetAliveMinorIDs()
 			local count = 0
+			local fallbackmin_spawns = majorSpawnsList
 			for i = 1, PlayerManager.GetAliveMinorsCount() do
 				if Players[tempMinorList[i]] ~= nil then
-					local startPlot = Players[tempMinorList[i]]:GetStartingPlot();
-					___Debug(tempMinorList[i], count)
-					if (startPlot == nil) then
-						___Debug("Error Minor Player is missing:", tempMinorList[i]);
-						count = count + 1
-						startPlot = Map.GetPlotByIndex(PlayerManager.GetAliveMajorsCount()+PlayerManager.GetAliveMinorsCount()+count);
-						local minPlayer = Players[tempMinorList[i]]
-						minPlayer:SetStartingPlot(startPlot);
-						___Debug("Minor Temp Start X: ", startPlot:GetX(), "Y: ", startPlot:GetY());
+					___Debug("Minor Check:",tempMinorList[i],"exist")
+					if Players[tempMinorList[i]]:IsAlive() == true and Players[tempMinorList[i]]:IsMajor() == false then
+						if Players[tempMinorList[i]]:GetStartingPlot() ~= nil then
+							___Debug("Minor Check:",tempMinorList[i],"spawn present",Players[tempMinorList[i]]:GetStartingPlot():GetX(),Players[tempMinorList[i]]:GetStartingPlot():GetY())
+							table.insert(majorSpawnsList, Players[tempMinorList[i]]:GetStartingPlot())
+							else
+							___Debug("Minor Check:",tempMinorList[i],"spawn missing")
+						end
 					else
-					___Debug("Minor", PlayerConfigurations[tempMinorList[i]]:GetCivilizationTypeName(), "Start X: ", startPlot:GetX(), "Y: ", startPlot:GetY());
+					___Debug("Minor Error:",Players[tempMinorList[i]])
 					end
 				else
-					count = count + 1
+				___Debug("Minor Error:",Players[tempMinorList[i]])
 				end
 			end
-
+			for i = 1, PlayerManager.GetAliveMinorsCount() do
+				if Players[tempMinorList[i]] ~= nil then
+					if Players[tempMinorList[i]]:IsAlive() == true and Players[tempMinorList[i]]:IsMajor() == false then
+						if Players[tempMinorList[i]]:GetStartingPlot() == nil then
+							___Debug("Minor Check:",tempMinorList[i],"spawn missing - fixing")
+							for j, spawns in ipairs(fallbackmin_spawns) do
+								bGotValid = false
+								local tmp
+								if spawns ~= nil then
+									for n =1, 4 do
+										tmp = Map.GetAdjacentPlot(spawns:GetX(),spawns:GetY(),n)
+										if tmp ~= nil then
+											bGotValid = true
+											for m, spawn_2 in ipairs(fallbackmin_spawns) do
+												if spawn_2 == tmp then
+													bGotValid = false
+												end
+											end
+											if bGotValid == true then
+												Players[tempMinorList[i]]:SetStartingPlot(tmp)
+												table.insert(majorSpawnsList, tmp)
+												break
+											end
+										end	
+									end
+								end
+								if bGotValid == true then
+									print("Minor Check:",tempMinorList[i],"spawn missing - assigned")
+									break
+								end
+							end
+						end
+					end
+				end
+			end
 			___Debug(count,"Minor Players are missing");
 	
 			if (count > 0) then
