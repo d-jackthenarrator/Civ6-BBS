@@ -3,6 +3,7 @@
 --	AUTHOR:  D. / Jack The Narrator
 --	PURPOSE: Gameplay script - Rebalance the map for CPL requirements
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ExposedMembers.LuaEvents = LuaEvents
 
 include "MapEnums"
@@ -289,6 +290,10 @@ include "MapEnums"
 --		Introduced regional score
 --		Fixed Kilimanjaro
 --		Adjusted the yield targeting (start from the highest yield, favour less changes)
+-- 1.6.1
+--		Improve the calculation algorithm (iteration loop is within the instance rather than iterating the placement instance)
+--		Increase the distance penalty to reduce cluster
+--		Increase the coastal value to reduce inland spawn for civ with several biases
 
 
 
@@ -306,7 +311,7 @@ include "MapEnums"
 --	Run spawn correction Coastal (failsafe to prevent harbor blocked by reefs) 
 --	Run Choke point analysis (prevent crashes)
 
-g_version = "1.6.0"
+g_version = "1.6.1"
 
 -----------------------------------------------------------------------------
 function __Debug(...)
@@ -337,36 +342,8 @@ function Clean()
 			end
 		end
 
-		-- Check for Minor placement failure
 
-		if (Game:GetProperty("BBS_MINOR_FAILING_TOTAL") ~= nil) then
-			-- BBS placement true
-			if (Game:GetProperty("BBS_MINOR_FAILING_TOTAL") > 0) then
-				__Debug("Minor failure module:",Game:GetProperty("BBS_MINOR_FAILING_TOTAL")," Minor Civs are failing.")
-				for j = 1, Game:GetProperty("BBS_MINOR_FAILING_TOTAL") do
-					if (Game:GetProperty("BBS_MINOR_FAILING_ID_"..j) ~= nil) then
-						local playerUnits;
-						if (Players[Game:GetProperty("BBS_MINOR_FAILING_ID_"..j)] ~= nil) then
-							if (Players[Game:GetProperty("BBS_MINOR_FAILING_ID_"..j)]:GetUnits() ~= nil) then
-								playerUnits = Players[Game:GetProperty("BBS_MINOR_FAILING_ID_"..j)]:GetUnits();
-								for k, unit in playerUnits:Members() do
-									playerUnits:Destroy(unit)			
-								end
-								print("Minor failure module: Minor Player", Game:GetProperty("BBS_MINOR_FAILING_ID_"..j)," has been eliminated at AssignStart Stage")
-							end
-						end
-					end
-				end
-				else
-				__Debug("Minor failure module: All Minor Civs have been placed.")
-			end
-			else
-			-- Firaxis placement true
-			__Debug("Minor failure module: Firaxis placement only check if minimum distance are met")
-		end
-
-
-		-- Check Distances if Firaxis Placement Algo has been used
+		-- Check Distances 
 		local bError_proximity = false;
 
 
@@ -379,15 +356,12 @@ function Clean()
 						local distance = 99;
 						if pStartPlot_i ~= nil and pStartPlot_j ~= nil then
 							distance = Map.GetPlotDistance(pStartPlot_i:GetIndex(),pStartPlot_j:GetIndex())
-							print("I:", i,"J:", j,"Distance:",distance)
+							__Debug("I:", i,"J:", j,"Distance:",distance)
 							else
 							print("Error: Minor",pStartPlot_i,pStartPlot_j)
 						end
 						if (distance < 9 ) then
 							print ("Init: Minimum CPL distance rule breached");
-							if (Game:GetProperty("BBS_MINOR_FAILING_TOTAL") == nil) then
-								Game:SetProperty("BBS_MINOR_FAILING_TOTAL",0)
-							end
 							bError_proximity = true;
 							Game:SetProperty("BBS_DISTANCE_ERROR","Two Players are only "..distance.." tiles away from each other and allowed to remap as per CPL rules.")
 						end
@@ -398,25 +372,20 @@ function Clean()
 						local pStartPlot_j = Players[minor_table[j]]:GetStartingPlot()
 						local distance = 99
 						if pStartPlot_i ~= nil and pStartPlot_j ~= nil then
-							Map.GetPlotDistance(pStartPlot_i:GetIndex(),pStartPlot_j:GetIndex())
+							distance = Map.GetPlotDistance(pStartPlot_i:GetIndex(),pStartPlot_j:GetIndex())
 							__Debug("I:", i,"J:", j,"Distance:",distance)
 							else
 							print("Error: Minor",pStartPlot_i,pStartPlot_j,i,j)
 						end
-						if (distance < 6 ) or pStartPlot_i == pStartPlot_j then
+						if (distance < 6 or distance == 6  ) or pStartPlot_i == pStartPlot_j then
 							print ("Init: Minimum CPL distance rule breached");
-							if (Game:GetProperty("BBS_MINOR_FAILING_TOTAL") == nil) then
-								Game:SetProperty("BBS_MINOR_FAILING_TOTAL",0)
-							end
 							-- Let's kill a CS to ensure the game is within CPL rules
 							local playerUnits = {};
 							playerUnits = Players[minor_table[j]]:GetUnits();
 							for _, unit in playerUnits:Members() do
 								playerUnits:Destroy(unit)			
 							end
-							print("Minor failure module: Firaxis Placement: Minor Player", PlayerConfigurations[minor_table[j]]:GetCivilizationTypeName()," has been eliminated (too close to major).",distance)
-							Game:SetProperty("BBS_MINOR_FAILING_ID_"..minor_table[j],minor_table[j])
-							Game:SetProperty("BBS_MINOR_FAILING_TOTAL",Game:GetProperty("BBS_MINOR_FAILING_TOTAL")+1)
+							print("Minor failure module: Minor Player", PlayerConfigurations[minor_table[j]]:GetCivilizationTypeName()," has been eliminated (too close to major).",distance)
 						end
 					end
 				end
@@ -435,39 +404,19 @@ function Clean()
 			for j = 1, minor_count do
 				local pStartPlot_j = Players[minor_table[j]]:GetStartingPlot()
 				if (minor_table[i] ~= minor_table[j]) then
-					if (Game:GetProperty("BBS_MINOR_FAILING_TOTAL") ~= nil) then
-						bmin = false
-						for k = 1, Game:GetProperty("BBS_MINOR_FAILING_TOTAL") do
-							if Game:GetProperty("BBS_MINOR_FAILING_ID_"..k) == minor_table[i] or Game:GetProperty("BBS_MINOR_FAILING_ID_"..k) == minor_table[j] then
-								bmin = true
-							end
-						end
-					end
-					if bmin == false then
-						local distance = Map.GetPlotDistance(pStartPlot_i:GetIndex(),pStartPlot_j:GetIndex())
+					local distance = Map.GetPlotDistance(pStartPlot_i:GetIndex(),pStartPlot_j:GetIndex())
 						__Debug("I:", minor_table[i],"J:", minor_table[j],"Distance:",distance)
-						if (distance < 7 ) or pStartPlot_i == pStartPlot_j then
-							if (Game:GetProperty("BBS_MINOR_FAILING_TOTAL") == nil) then
-								Game:SetProperty("BBS_MINOR_FAILING_TOTAL",0)
-							end
+						if (distance < 6  ) or pStartPlot_i == pStartPlot_j then
 							-- Let's kill a CS to avoid a CS settler roaming and breaking CPL rules
 							local playerUnits = {};
 							playerUnits = Players[minor_table[j]]:GetUnits();
 							if playerUnits ~= nil then
-								print(minor_table[j],playerUnits,playerUnits:GetCount())
-								print(playerUnits:Members())
 								for _, unit in playerUnits:Members() do
-									print(UnitManager.GetTypeName(unit))
 									playerUnits:Destroy(unit)			
 								end
 							end
-							print("Minor failure module: Firaxis Placement: Minor Player", PlayerConfigurations[minor_table[j]]:GetCivilizationTypeName()," has been eliminated (too close to minor).",distance)
-							Game:SetProperty("BBS_MINOR_FAILING_TOTAL",Game:GetProperty("BBS_MINOR_FAILING_TOTAL")+1)
-							Game:SetProperty("BBS_MINOR_FAILING_ID_"..Game:GetProperty("BBS_MINOR_FAILING_TOTAL"),minor_table[j])
+							print("Minor failure module: Minor Player", PlayerConfigurations[minor_table[j]]:GetCivilizationTypeName()," has been eliminated (too close to minor).",distance)
 						end
-						else
-						bmin = false
-					end
 				end	
 			end
 		end
@@ -486,7 +435,6 @@ function Init_D_Balance()
 	print ("---------------------------------------------------------");
 	print ("------------- BBS Script v"..g_version.." -D- Init -------------");
 	print ("---------------------------------------------------------");
-
 	if (Game:GetProperty("BBS_INIT_COUNT") == nil) then
 		Game:SetProperty("BBS_INIT_COUNT",1)
 		Clean()

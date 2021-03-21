@@ -146,10 +146,8 @@ function GenerateMap()
 	local GoodyGen = AddGoodies(g_iW, g_iH);
 
 	local Balance = BBS_Script();
-	
 	AreaBuilder.Recalculate();
 	TerrainBuilder.AnalyzeChokepoints();
-
 end
 
 -------------------------------------------------------------------------------

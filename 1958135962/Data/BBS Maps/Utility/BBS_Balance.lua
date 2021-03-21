@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	 BBS_Balance.lua 1.6.0
+--	FILE:	 BBS_Balance.lua 1.6.1
 --	AUTHOR:  D. / Jack The Narrator, 57Fan
 --	PURPOSE: Rebalance the map spawn post placement 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,14 +80,11 @@ local COASTAL_LEADERS = {"LEADER_VICTORIA", "LEADER_HOJO", "LEADER_DIDO"};
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function BBS_Script()
-	print ("Initialization", os.date("%c"))
+	print ("Initialization Balancing Spawn", os.date("%c"))
 	
 	local currentTurn = Game.GetCurrentGameTurn();
 	eContinents	= {};
 	
-
-
-
 	
 
 -- =============================================================================
@@ -139,6 +136,7 @@ function BBS_Script()
 		world_age = MapConfiguration.GetValue("world_age");
 		local ridge = MapConfiguration.GetValue("BBSRidge");
 		print ("Init: Map Size: ", mapSize, "2 = Small, 5 = Huge");
+		print ("Context",GameConfiguration.IsAnyMultiplayer())
 		local gridWidth, gridHeight = Map.GetGridSize();
 		print ("Init: gridWidth",gridWidth,"gridHeight",gridHeight)
 		print ("Init: Climate: ", startTemp, "1 = Hot, 2 = Standard, 3 = Cold");
@@ -506,12 +504,12 @@ function BBS_Script()
 				if (majList[i] ~= nil) then
 					if(majList[i].leader ~= "LEADER_SPECTATOR"  ) then
 						-- Check for Tundra Starts
-						if ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 6 and IsTundraCiv(majList[i].civ) == false ) then
+						if ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 6 and IsTundraCiv(majList[i].civ) == false ) or ( (majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 2 and (majList[i].water_start + majList[i].water_inner + majList[i].water_outer) > 4 and IsTundraCiv(majList[i].civ) == false ) then
 							__Debug("Terraforming Polar Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
 							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
 						end
 						
-						if ( (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start) > 6 and IsDesertCiv(majList[i].civ) == false ) then
+						if ( (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start) > 6 and IsDesertCiv(majList[i].civ) == false ) or ( (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start) > 2  and (majList[i].water_start + majList[i].water_inner + majList[i].water_outer) > 4 and IsDesertCiv(majList[i].civ) == false ) then
 							if( IsTundraCiv(majList[i].civ) == true ) then 
 							__Debug("Terraforming Desert Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
 							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,1);
@@ -521,6 +519,11 @@ function BBS_Script()
 							end
 						end
 						
+						if (IsDesertCiv(majList[i].civ) == false) and ( IsTundraCiv(majList[i].civ) == false ) and (majList[i].desert_outer + majList[i].desert_inner + majList[i].desert_start + majList[i].snow_start + majList[i].snow_inner + majList[i].snow_outer) > 4  then
+							__Debug("Terraforming Mixed Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
+							Terraforming(Map.GetPlot(majList[i].plotX,majList[i].plotY), iBalancingThree,0);
+						end
+
 
 						if( IsDesertCiv(majList[i].civ) == true) then -- Now forces to Terraform Mali to counterbalance the lower amount of deserts on the map
 							__Debug("Mali Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ);
@@ -984,15 +987,17 @@ function BBS_Script()
       -- Minimal naval score, under which one civ cannot go under (with luxuries for exemple)
       local minNavalScore = 0;
       for i = 1, major_count do
+		if (majList[i] ~= nil and majList[i].leader ~= "LEADER_SPECTATOR") then
 			if (majList[i].isFullCoastal == true) then
-            __Debug("Leader:", majList[i].leader, " score:", majList[i].coastalScore);
-            __Debug("Leader:", majList[i].leader, " MIN score:", majList[i].minCoastalScore);
-            navalCivsCount = navalCivsCount + 1;
-            totalcoastalScore = totalcoastalScore + majList[i].coastalScore;
-            if (majList[i].minCoastalScore > minNavalScore) then
-               minNavalScore = majList[i].minCoastalScore;
-            end
-         end
+				__Debug("Leader:", majList[i].leader, " score:", majList[i].coastalScore);
+				__Debug("Leader:", majList[i].leader, " MIN score:", majList[i].minCoastalScore);
+				navalCivsCount = navalCivsCount + 1;
+				totalcoastalScore = totalcoastalScore + majList[i].coastalScore;
+				if (majList[i].minCoastalScore > minNavalScore) then
+					minNavalScore = majList[i].minCoastalScore;
+				end
+			end
+		 end
       end
       
       
@@ -1030,6 +1035,7 @@ function BBS_Script()
       -------
       
       for i = 1, major_count do
+		if (majList[i] ~= nil and majList[i].leader ~= "LEADER_SPECTATOR") then
 			if (majList[i].isFullCoastal == true) then
             __Debug("--------------");
             __Debug("Adjusting naval score of:", majList[i].leader);
@@ -1037,6 +1043,7 @@ function BBS_Script()
             adjustCoastal(majList[i], aimedNavalScore, COASTAL_MARGIN);
             __Debug("Score after balancing:", majList[i].coastalScore);
          end
+		 end
       end
 
       __Debug("---");
@@ -1519,7 +1526,7 @@ function BBS_Script()
 		else
 		print ("BBS Script - Completed - Debug", os.date("%c") );
 		end -- Debug Balancing
-		
+
 		-- Gemedon's input to limit crash
 		TerrainBuilder.AnalyzeChokepoints()
 		-- Coast -> Lake
@@ -1537,7 +1544,7 @@ function BBS_Script()
 				end
 			end
 		end
-		
+		print ("BBS Script - Completed", os.date("%c") );
 	else
 		__Debug("D TURN STARTING: Any other turn");
 
