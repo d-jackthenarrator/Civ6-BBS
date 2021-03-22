@@ -159,7 +159,7 @@ function BBS_Script()
 		print ("Init: World Age: ", world_age, "1 = New, 2 = Standard 3 = Old");
 		print ("Init: Ridge: ", ridge, "0 = Standard, 1 = Classic, 2 = Large Open 4 = Flat Earth");
 		print ("Init: Sea Level: ", sea_level, "1 = Low Sea Level, 2 = Standard, 3 = High Sea Level");
-		print("Init: Strategic Resources:",MapConfiguration.GetValue("BBSStratRes"))
+		print("Init: Strategic Resources:",MapConfiguration.GetValue("BBSStratRes"), "0 = standard, 1 = abundant, 2 = epic, 3 = spawn guaranteed")
 		local resourcesConfig = MapConfiguration.GetValue("resources");
 		print ("Init: Resources: ", resourcesConfig, "1 = Sparse, 2 = Standard, 3 = Abundant");
 		local startConfig = MapConfiguration.GetValue("start")
