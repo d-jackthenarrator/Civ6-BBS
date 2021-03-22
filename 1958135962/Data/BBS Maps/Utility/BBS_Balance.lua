@@ -427,7 +427,7 @@ function BBS_Script()
         for i = 1, major_count do
 			if major_table[i] ~= nil then
 				if Players[major_table[i]] ~= nil and Players[major_table[i]]:GetTeam() ~= nil and majList[i] ~= nil then
-					print("Player ID:", major_table[i], " Team:", Players[major_table[i]]:GetTeam(), majList[i].civ, majList[i].leader);
+					--print("Player ID:", major_table[i], " Team:", Players[major_table[i]]:GetTeam(), majList[i].civ, majList[i].leader);
 					else
 					print("Error:",i,major_table[i],"Missing Player")
 				end
@@ -631,7 +631,7 @@ function BBS_Script()
 					local wplot = Map.GetPlot(majList[i].plotX,majList[i].plotY)
 					if (wplot:IsFreshWater() == false) then
 					-- Fix No Water
-						print("Water Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ); -- put a print to catch the error in non debug mode
+						__Debug("Water Terraforming Start X: ", majList[i].plotX, "Start Y: ", majList[i].plotY, "Player: ",i," ",majList[i].leader, majList[i].civ); -- put a print to catch the error in non debug mode
 						Terraforming_Water(Map.GetPlot(majList[i].plotX,majList[i].plotY),majList[i].civ);
 					end
 				end
@@ -3357,6 +3357,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							target_tiles[j].index = adjacentPlot:GetIndex()
 							valid_count = valid_count + 1
 							__Debug("Terraforming Best: Not Enough Valid Plots - Add Plot X",adjacentPlot:GetX(),"Y:",adjacentPlot:GetY());
+							break;
 						end
 					end				
 				end

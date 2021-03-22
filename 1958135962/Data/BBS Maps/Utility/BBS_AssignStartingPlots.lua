@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.1
+--	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.2
 --	AUTHOR:  D. / Jack The Narrator, Kilua
 --	PURPOSE: Custom Spawn Placement Script
 ------------------------------------------------------------------------------
@@ -224,15 +224,14 @@ function BBS_AssignStartingPlots.Create(args)
 	if bError_major ~= false or bError_proximity ~= false or bError_shit_settle ~= false then
 		print("BBS_AssignStartingPlots: To Many Attempts Failed - Go to Firaxis Placement")
 		Game:SetProperty("BBS_RESPAWN",false)
+		return AssignStartingPlots.Create(args)
 	end	
 	
-	if bError_major == false or bError_proximity == false or bError_shit_settle == false then
-		print("BBS_AssignStartingPlots: Sending Data")
-		return instance
-	end		
-	
-	return AssignStartingPlots.Create(args)
 
+	print("BBS_AssignStartingPlots: Sending Data")
+	return instance
+	
+	
 end
 
 ------------------------------------------------------------------------------
@@ -490,7 +489,7 @@ function BBS_AssignStartingPlots:__InitStartingData()
 
 			local tempMinorList = PlayerManager.GetAliveMinorIDs()
 			local count = 0
-			local fallbackmin_spawns = majorSpawnsList
+			local fallbackmin_spawns = {}
 			for i = 1, PlayerManager.GetAliveMinorsCount() do
 				if Players[tempMinorList[i]] ~= nil then
 					___Debug("Minor Check:",tempMinorList[i],"exist")
