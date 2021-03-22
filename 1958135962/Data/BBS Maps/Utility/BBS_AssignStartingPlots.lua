@@ -496,7 +496,7 @@ function BBS_AssignStartingPlots:__InitStartingData()
 					if Players[tempMinorList[i]]:IsAlive() == true and Players[tempMinorList[i]]:IsMajor() == false then
 						if Players[tempMinorList[i]]:GetStartingPlot() ~= nil then
 							___Debug("Minor Check:",tempMinorList[i],"spawn present",Players[tempMinorList[i]]:GetStartingPlot():GetX(),Players[tempMinorList[i]]:GetStartingPlot():GetY())
-							table.insert(majorSpawnsList, Players[tempMinorList[i]]:GetStartingPlot())
+							table.insert(fallbackmin_spawns, Players[tempMinorList[i]]:GetStartingPlot())
 							else
 							___Debug("Minor Check:",tempMinorList[i],"spawn missing")
 						end
@@ -507,11 +507,12 @@ function BBS_AssignStartingPlots:__InitStartingData()
 				___Debug("Minor Error:",Players[tempMinorList[i]])
 				end
 			end
+			
 			for i = 1, PlayerManager.GetAliveMinorsCount() do
 				if Players[tempMinorList[i]] ~= nil then
 					if Players[tempMinorList[i]]:IsAlive() == true and Players[tempMinorList[i]]:IsMajor() == false then
 						if Players[tempMinorList[i]]:GetStartingPlot() == nil then
-							___Debug("Minor Check:",tempMinorList[i],"spawn missing - fixing")
+							print("Minor Check:",tempMinorList[i],"spawn missing - fixing")
 							for j, spawns in ipairs(fallbackmin_spawns) do
 								bGotValid = false
 								local tmp
@@ -527,7 +528,7 @@ function BBS_AssignStartingPlots:__InitStartingData()
 											end
 											if bGotValid == true then
 												Players[tempMinorList[i]]:SetStartingPlot(tmp)
-												table.insert(majorSpawnsList, tmp)
+												table.insert(fallbackmin_spawns, tmp)
 												break
 											end
 										end	
