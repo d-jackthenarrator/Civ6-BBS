@@ -150,7 +150,7 @@ function BBS_NaturalWonderGenerator:__CheckWonders()
 			local CheckedWonder = pPlot:GetFeatureType()
 			local CheckedWonder_Name = tostring(GameInfo.Features[CheckedWonder].Name)
 			--print ("Feature Type: ",CheckedWonder_Name,"X:",pPlot:GetX(),"Y;",pPlot:GetY(),MapFeatureManager.IsVolcano(pPlot))
-			if MapFeatureManager.IsVolcano(pPlot) == true and (CheckedWonder_Name ~= "LOC_FEATURE_VESUVIUS_NAME" and CheckedWonder_Name ~= "LOC_FEATURE_EYJAFJALLAJOKULL_NAME" and CheckedWonder_Name ~= "LOC_FEATURE_KRAKATOA_NAME") then
+			if MapFeatureManager.IsVolcano(pPlot) == true and (CheckedWonder_Name ~= "LOC_FEATURE_VESUVIUS_NAME" and CheckedWonder_Name ~= "LOC_FEATURE_EYJAFJALLAJOKULL_NAME" and CheckedWonder_Name ~= "LOC_FEATURE_KRAKATOA_NAME" and CheckedWonder_Name ~= "LOC_FEATURE_KILIMANJARO_NAME") then
 				print ("Volcano Detected: Remove")				
 				TerrainBuilder.SetFeatureType(pPlot,-1)
 				TerrainBuilder.SetFeatureType(pPlot,g_FEATURE_VOLCANO)
