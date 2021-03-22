@@ -3357,6 +3357,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							target_tiles[j].index = adjacentPlot:GetIndex()
 							valid_count = valid_count + 1
 							__Debug("Terraforming Best: Not Enough Valid Plots - Add Plot X",adjacentPlot:GetX(),"Y:",adjacentPlot:GetY());
+                     break;
 						end
 					end				
 				end
