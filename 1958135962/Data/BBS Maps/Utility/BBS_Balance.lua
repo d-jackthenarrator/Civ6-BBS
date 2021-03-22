@@ -427,11 +427,11 @@ function BBS_Script()
         for i = 1, major_count do
 			if major_table[i] ~= nil then
 				if Players[major_table[i]] ~= nil and Players[major_table[i]]:GetTeam() ~= nil and majList[i] ~= nil then
-					--print("Player ID:", major_table[i], " Team:", Players[major_table[i]]:GetTeam(), majList[i].civ, majList[i].leader);
-					else
+					print("Player ID:", major_table[i], " Team:", Players[major_table[i]]:GetTeam(), majList[i].civ, majList[i].leader);
+            else
 					print("Error:",i,major_table[i],"Missing Player")
 				end
-				else
+         else
 				print("Error:",i,major_table[i],"Missing Player")
 			end
 	   end
