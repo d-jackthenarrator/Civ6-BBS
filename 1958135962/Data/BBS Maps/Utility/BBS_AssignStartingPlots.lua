@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.1
+--	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.2
 --	AUTHOR:  D. / Jack The Narrator, Kilua
 --	PURPOSE: Custom Spawn Placement Script
 ------------------------------------------------------------------------------
@@ -224,15 +224,14 @@ function BBS_AssignStartingPlots.Create(args)
 	if bError_major ~= false or bError_proximity ~= false or bError_shit_settle ~= false then
 		print("BBS_AssignStartingPlots: To Many Attempts Failed - Go to Firaxis Placement")
 		Game:SetProperty("BBS_RESPAWN",false)
+		return AssignStartingPlots.Create(args)
 	end	
 	
-	if bError_major == false or bError_proximity == false or bError_shit_settle == false then
-		print("BBS_AssignStartingPlots: Sending Data")
-		return instance
-	end		
-	
-	return AssignStartingPlots.Create(args)
 
+	print("BBS_AssignStartingPlots: Sending Data")
+	return instance
+	
+	
 end
 
 ------------------------------------------------------------------------------
@@ -490,14 +489,14 @@ function BBS_AssignStartingPlots:__InitStartingData()
 
 			local tempMinorList = PlayerManager.GetAliveMinorIDs()
 			local count = 0
-			local fallbackmin_spawns = majorSpawnsList
+			local fallbackmin_spawns = {}
 			for i = 1, PlayerManager.GetAliveMinorsCount() do
 				if Players[tempMinorList[i]] ~= nil then
 					___Debug("Minor Check:",tempMinorList[i],"exist")
 					if Players[tempMinorList[i]]:IsAlive() == true and Players[tempMinorList[i]]:IsMajor() == false then
 						if Players[tempMinorList[i]]:GetStartingPlot() ~= nil then
 							___Debug("Minor Check:",tempMinorList[i],"spawn present",Players[tempMinorList[i]]:GetStartingPlot():GetX(),Players[tempMinorList[i]]:GetStartingPlot():GetY())
-							table.insert(majorSpawnsList, Players[tempMinorList[i]]:GetStartingPlot())
+							table.insert(fallbackmin_spawns, Players[tempMinorList[i]]:GetStartingPlot())
 							else
 							___Debug("Minor Check:",tempMinorList[i],"spawn missing")
 						end
@@ -508,11 +507,12 @@ function BBS_AssignStartingPlots:__InitStartingData()
 				___Debug("Minor Error:",Players[tempMinorList[i]])
 				end
 			end
+			
 			for i = 1, PlayerManager.GetAliveMinorsCount() do
 				if Players[tempMinorList[i]] ~= nil then
 					if Players[tempMinorList[i]]:IsAlive() == true and Players[tempMinorList[i]]:IsMajor() == false then
 						if Players[tempMinorList[i]]:GetStartingPlot() == nil then
-							___Debug("Minor Check:",tempMinorList[i],"spawn missing - fixing")
+							print("Minor Check:",tempMinorList[i],"spawn missing - fixing")
 							for j, spawns in ipairs(fallbackmin_spawns) do
 								bGotValid = false
 								local tmp
@@ -528,7 +528,7 @@ function BBS_AssignStartingPlots:__InitStartingData()
 											end
 											if bGotValid == true then
 												Players[tempMinorList[i]]:SetStartingPlot(tmp)
-												table.insert(majorSpawnsList, tmp)
+												table.insert(fallbackmin_spawns, tmp)
 												break
 											end
 										end	
@@ -575,7 +575,7 @@ function BBS_AssignStartingPlots:__InitStartingData()
 			bEndIteration = true
 			else
 			print("Attempt Failed",bError_major,bError_proximity,bError_shit_settle)
-			Major_Distance_Target = Major_Distance_Target - 2
+			Major_Distance_Target = Major_Distance_Target - 3
 			bRepeatPlacement = true			  
 			if Major_Distance_Target < 9 then
 				Major_Distance_Target = 9
