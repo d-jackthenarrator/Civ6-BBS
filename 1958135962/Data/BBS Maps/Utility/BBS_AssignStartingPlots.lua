@@ -130,7 +130,38 @@ function BBS_AssignStartingPlots.Create(args)
 	
 	if Map.GetMapSize() == 0 and  PlayerManager.GetAliveMajorsCount() == 2  then
 		Major_Distance_Target = 18
-	end	
+	end
+	
+	---
+        --- 57Fan rework of distances
+        ---
+
+        local baseDistance = 12;
+
+        local aliveMajors = PlayerManager.GetAliveMajorsCount();
+        local mapSize = Map.GetMapSize();
+
+        local expectedPlayers = mapSize * 2 + 2;
+
+        -- standard aimed: 12
+        -- standard config: map size * 2 + 2 == player count
+        -- ex: map size 3 (standard) for 8 players
+        -- ex: map size 5 (huge) for 12 players
+
+        if (mapSize >= 3) then
+          --- Map  is at least a size too small
+           if (expectedPlayers - aliveMajors <= -2) then
+	      print("Warning: using a map too small for the amount of players !");
+	      print("Will Reduce distane between players");
+  	      Major_Distance_Target = baseDistance - 2;
+           --- Map  is at least a size too big
+           elseif (expectedPlayers - aliveMajors >= 2) then
+	      print("Warning: using a map too small for the amount of players !");
+	      Major_Distance_Target = baseDistance - 2;
+           else
+	      Major_Distance_Target = baseDistance;
+           end
+       end
 	
 	
 	instance  = {
