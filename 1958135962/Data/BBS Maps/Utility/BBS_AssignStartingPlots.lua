@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.2
+--	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.3
 --	AUTHOR:  D. / Jack The Narrator, Kilua
 --	PURPOSE: Custom Spawn Placement Script
 ------------------------------------------------------------------------------
@@ -407,7 +407,7 @@ function BBS_AssignStartingPlots:__InitStartingData()
 			if (self.iNumSpecMajorCivs > 0) then
 				for i = 1, self.iNumSpecMajorCivs do
 					local specPlayer = Players[self.specMajorList[i]]
-					local pStartPlot = Map.GetPlotByIndex(0+self.iNumSpecMajorCivs);
+					local pStartPlot = Map.GetPlotByIndex(0+i+self.iNumSpecMajorCivs);
 					specPlayer:SetStartingPlot(pStartPlot);
 					___Debug("Spec Start X: ", pStartPlot:GetX(), "Spec Start Y: ", pStartPlot:GetY());
 				end
