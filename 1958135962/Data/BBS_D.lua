@@ -297,7 +297,10 @@ include "MapEnums"
 --		Fixed a minor error that would sometime lead a tile to be changed twice.
 -- 1.6.2
 --		Fixed CS first meet issue
-
+-- 1.6.4
+--		Wetlands map are now supported
+--		Maori will have distance check when placed with other player (only support one Maori for now)
+--		Shorter loading time
 
 
 -- Code structure: Code is run right before the first turn starts
@@ -314,7 +317,7 @@ include "MapEnums"
 --	Run spawn correction Coastal (failsafe to prevent harbor blocked by reefs) 
 --	Run Choke point analysis (prevent crashes)
 
-g_version = "1.6.3"
+g_version = "1.6.4"
 
 -----------------------------------------------------------------------------
 function __Debug(...)
