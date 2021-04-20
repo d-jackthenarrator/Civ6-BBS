@@ -455,13 +455,8 @@ function Init_D_Balance()
 	if (Game:GetProperty("BBS_INIT_COUNT") == nil) then
 		Game:SetProperty("BBS_INIT_COUNT",1)
 		Clean()
-		else
-		Game:SetProperty("BBS_INIT_COUNT",Game:GetProperty("BBS_INIT_COUNT")+1)
 	end
 	print ("Turn: ", Game.GetCurrentGameTurn(),os.date())	
-	if ( Game:GetProperty("BBS_INIT_COUNT") ) > 1 then
-		print ("Init: ", Game:GetProperty("BBS_INIT_COUNT")," times.")
-	end
 
 end
 

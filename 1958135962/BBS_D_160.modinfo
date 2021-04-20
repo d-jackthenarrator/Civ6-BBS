@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<<<<<<< Updated upstream
 <Mod id="c88cba8b-8311-4d35-90c3-51a4a5d6654f" version="162">
+=======
+<Mod id="c88cba8b-8311-4d35-90c3-51a4a5d6654b" version="165">
+>>>>>>> Stashed changes
 	<Properties>
 	    <Name>LOC_BBS_TITLE</Name>
 		<Description>LOC_BBS_DESCRIPTION</Description>
@@ -8,12 +12,21 @@
 		<Authors>D. / Jack The Narrator</Authors>
 		<SpecialThanks>Civfanatics.com, CPL, CivFR, 57 Fan, Wazabaza , iElden, Deliverator, VonHolio, Braizh, Kilua, Gedemon, Je, EvilVictor, StormingRomans, Ben</SpecialThanks>
 		<CompatibleVersions>1.2,2.0</CompatibleVersions>
+<<<<<<< Updated upstream
+=======
+		<Version>165</Version>
+>>>>>>> Stashed changes
 	</Properties>
 	
 		<LocalizedText>
 		<Text id="LOC_BBS_TITLE">
+<<<<<<< Updated upstream
 			<en_US>Better Balanced Starts 1.6.2</en_US>
 			<fr_FR>Better Balanced Starts 1.6.2</fr_FR>
+=======
+			<en_US>Better Balanced Starts 1.6.5 BETA</en_US>
+			<fr_FR>Better Balanced Starts 1.6.5 BETA</fr_FR>
+>>>>>>> Stashed changes
 		</Text>
 		<Text id="LOC_BBS_TEASER">
 			<en_US>Balanced spawn placement for tournaments.</en_US>

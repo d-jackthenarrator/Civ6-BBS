@@ -1,6 +1,11 @@
 ------------------------------------------------------------------------------
+<<<<<<< Updated upstream
 --	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.2
 --	AUTHOR:  D. / Jack The Narrator, Kilua
+=======
+--	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.5
+--	AUTHOR:  D. / Jack The Narrator
+>>>>>>> Stashed changes
 --	PURPOSE: Custom Spawn Placement Script
 ------------------------------------------------------------------------------
 --	Copyright (c) 2014 Firaxis Games, Inc. All rights reserved.
@@ -25,7 +30,13 @@ local Teamers_Ref_team = nil
 local g_negative_bias = {}
 local g_custom_bias = {}
 local g_evaluated_plots = {}
+<<<<<<< Updated upstream
 local Major_Distance_Target = 18
+=======
+local Major_Distance_Target = 16
+local Base_Major_Distance_Target = 16
+local Minor_Distance_Target = 0
+>>>>>>> Stashed changes
 local bMinDistance = false
 local civs = {};
 ------------------------------------------------------------------------------
@@ -79,37 +90,37 @@ function BBS_AssignStartingPlots.Create(args)
 
 	
 	local instance = {}
-	--if MapConfiguration.GetValue("MAP_SCRIPT") == "Pangaea.lua" then
-	--	Major_Distance_Target = 20
-	--end	
+	if MapConfiguration.GetValue("MAP_SCRIPT") == "Pangaea.lua" then
+		Major_Distance_Target = 18
+	end	
 	if MapConfiguration.GetValue("MAP_SCRIPT") == "Terra.lua" then
 		Major_Distance_Target = 16
 	end
 	if Teamers_Config == 0 then
 		Major_Distance_Target = Major_Distance_Target - 3 
 	end
-	
-	if Map.GetMapSize() == 5 and  PlayerManager.GetAliveMajorsCount() > 10 then
+	-- Huge
+	if Map.GetMapSize() == 5 and  PlayerManager.GetAliveMajorsCount() > 11 then
 		Major_Distance_Target = Major_Distance_Target - 2
 	end
 	if Map.GetMapSize() == 5 and  PlayerManager.GetAliveMajorsCount() < 8 then
 		Major_Distance_Target = Major_Distance_Target + 2
 	end	
-	
+	-- Large
 	if Map.GetMapSize() == 4 and  PlayerManager.GetAliveMajorsCount() > 10 then
 		Major_Distance_Target = Major_Distance_Target - 2
 	end
 	if Map.GetMapSize() == 4 and  PlayerManager.GetAliveMajorsCount() < 8 then
 		Major_Distance_Target = Major_Distance_Target + 2
 	end	
-	
+	-- Standard
 	if Map.GetMapSize() == 3 and  PlayerManager.GetAliveMajorsCount() > 7 then
 		Major_Distance_Target = Major_Distance_Target - 3
 	end
 	if Map.GetMapSize() == 3 and  PlayerManager.GetAliveMajorsCount() < 8 then
 		Major_Distance_Target = Major_Distance_Target 
 	end	
-	
+	-- Small
 	if Map.GetMapSize() == 2 and  PlayerManager.GetAliveMajorsCount() > 5 then
 		Major_Distance_Target = Major_Distance_Target - 4
 	end
@@ -132,6 +143,7 @@ function BBS_AssignStartingPlots.Create(args)
 		Major_Distance_Target = 18
 	end	
 	
+	Base_Major_Distance_Target = Major_Distance_Target
 	
 	instance  = {
         -- Core Process member methods
@@ -575,7 +587,17 @@ function BBS_AssignStartingPlots:__InitStartingData()
 			bEndIteration = true
 			else
 			print("Attempt Failed",bError_major,bError_proximity,bError_shit_settle)
+<<<<<<< Updated upstream
 			Major_Distance_Target = Major_Distance_Target - 2
+=======
+			if Map.GetMapSize() > 3 then
+				Major_Distance_Target = Major_Distance_Target - 2
+				Minor_Distance_Target = Minor_Distance_Target - 1
+				else
+				Major_Distance_Target = Major_Distance_Target - 1
+				Minor_Distance_Target = Minor_Distance_Target - 1				
+			end
+>>>>>>> Stashed changes
 			bRepeatPlacement = true			  
 			if Major_Distance_Target < 9 then
 				Major_Distance_Target = 9
@@ -611,6 +633,17 @@ function BBS_AssignStartingPlots:__SetStartBias(startPlots, iNumberCiv, playersL
 
 
 	civs = {}
+	
+	self.fallbackPlots = {};
+	local tmpfallback = {}
+	for iPlotIndex = 0, Map.GetPlotCount()-1, 1 do
+		local pPlot = Map.GetPlotByIndex(iPlotIndex)
+		if pPlot ~= nil and self:__GetValidAdjacent(pPlot,major) == true then
+			table.insert(tmpfallback ,pPlot)
+		end
+	end
+
+	self.fallbackPlots = GetShuffledCopyOfTable(tmpfallback);
 
 	local tierOrder = {};
 	self.regionTracker = {};
@@ -670,8 +703,93 @@ function BBS_AssignStartingPlots:__BiasRoutine(civilizationType, startPlots, ind
     	local ratedBiases = nil;
     	local regionIndex = 0;
     	local settled = false;
+<<<<<<< Updated upstream
+=======
+		--------------------------------------------------------------------------------------------
+		-- Smart placement cut time by looking at the most likely valid region first for Major Civs
+		--------------------------------------------------------------------------------------------
+		local bTaigaCiv = false
+		local bCoastalCiv = false
+		local bAridCiv = false
+		local bTropicalCiv = false
+		local bRiverCiv = false
+		
+		local regions = GetShuffledCopyOfTable(startPlots);
+		
+		if (major == true) then			
+			table.sort (biases, function(a, b) return a.Tier < b.Tier; end);			
+			if (biases ~= nil) then
+				for j, bias in ipairs(biases) do
+					if bias.Tier < 4 then
+						if (bias.Type == "TERRAINS") and (bias.Value == g_TERRAIN_TYPE_DESERT_HILLS or bias.Value == g_TERRAIN_TYPE_DESERT or bias.Value == g_TERRAIN_TYPE_DESERT_MOUNTAIN) then
+							bAridCiv = true
+							break
+						end
+						if (bias.Type == "TERRAINS") and (bias.Value == g_TERRAIN_TYPE_TUNDRA_HILLS or bias.Value == g_TERRAIN_TYPE_TUNDRA or bias.Value == g_TERRAIN_TYPE_TUNDRA_MOUNTAIN) then
+							bTaigaCiv = true
+							break
+						end	
+						if (bias.Type == "TERRAINS") and (bias.Value == g_TERRAIN_TYPE_COAST) then
+							bCoastalCiv = true
+							break
+						end
+						if (bias.Type == "FEATURES") and (bias.Value == g_FEATURE_JUNGLE) then
+							bTropicalCiv = true
+							break
+						end
+						if (bias.Type == "RIVERS") then
+							bRiverCiv = true
+							break
+						end
+					end
+				end
+			end
+			if (bAridCiv == true or bTaigaCiv == true or bCoastalCiv == true or bTropicalCiv == true or bRiverCiv == true) then
+				local sortedstartPlots = {}
+				-- best region first
+				for i, region in ipairs(regions) do
+				if bCoastalCiv == true and region.IsRegionCoastal then
+					table.insert(sortedstartPlots,region)
+				end
+				if bRiverCiv == true and region.IsRegionRiver then
+					table.insert(sortedstartPlots,region)
+				end
+				if bAridCiv == true and region.IsRegionArid then
+					table.insert(sortedstartPlots,region)
+				end
+				if bTaigaCiv == true and region.IsRegionTaiga then
+					table.insert(sortedstartPlots,region)
+				end
+				if bTropicalCiv == true and region.IsRegionTropical then
+					table.insert(sortedstartPlots,region)
+				end
+				end
+				
+				-- complete the set
+				if sortedstartPlots ~= nil then
+					for i, region in ipairs(regions) do
+						local bRegionAlreadyThere = false
+						for j, sorted_region in ipairs(sortedstartPlots) do
+							if region.StartIndex == sorted_region.StartIndex then
+								bRegionAlreadyThere = true
+								break
+							end
+						end
+						if bRegionAlreadyThere == false then
+							table.insert(sortedstartPlots,region)
+						end
+					end
+					regions = sortedstartPlots
+				end
+			end
+		end
+		
+		--------------------------------------------------------------------------------------------
+		-- Iteration of plot per Region, then would attempt to place on the best plot of the region
+		--------------------------------------------------------------------------------------------		
+>>>>>>> Stashed changes
 
-    	for i, region in ipairs(startPlots) do
+    	for i, region in ipairs(regions) do
 			___Debug("Bias Routine: Analysing Region index", i, "Tracker",self.regionTracker[i]);
 			if (self.regionTracker[i] ~= -1) then
        			if (region ~= nil and self:__TableSize(region) > 0) then
@@ -856,7 +974,7 @@ function BBS_AssignStartingPlots:__SettlePlot(ratedBiases, index, player, major,
 				if self:__MajorMajorCivBufferCheck(ratedBias.Plot,Players[player:GetID()]:GetTeam()) ~= false then
                 self.playerStarts[index] = {};
                     ___Debug("Settled plot :", ratedBias.Plot:GetX(), ":", ratedBias.Plot:GetY(), "Score :", ratedBias.Score, "Player:",player:GetID(),"Region:",regionIndex);
-					print("Settled Score :", ratedBias.Score.." ("..ratedBias.Region..")", "Player:",player:GetID(),"Region:",regionIndex, os.date("%c"))
+					print("Settled Score :", ratedBias.Score.." ("..ratedBias.Region..")", "Player:",player:GetID(),"Region:",regionIndex, "Distance:", Distance, os.date("%c"))
 					if ratedBias.Score < - 1000 then
 						print("X :", ratedBias.Plot:GetX(), "Y:",ratedBias.Plot:GetY(),"Region:",regionIndex)
 						bError_shit_settle = true
@@ -889,11 +1007,6 @@ function BBS_AssignStartingPlots:__SettlePlot(ratedBiases, index, player, major,
                     player:SetStartingPlot(ratedBias.Plot);
 				end
             end
-            if (regionIndex == -1 and settled) then
-                table.remove(self.fallbackPlots, ratedBias.Index)
-            end
-        elseif (regionIndex ~= -1) then
-            table.insert(self.fallbackPlots, ratedBias.Plot);
         end
     end
 
@@ -1484,8 +1597,28 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 			if Players[iPlayer] ~= nil then
 				if self:__MajorMajorCivBufferCheck(plot,Players[iPlayer]:GetTeam()) == false then
 					ratedPlot.Score = ratedPlot.Score - 5000;
+<<<<<<< Updated upstream
 				end
 			end	
+=======
+				else
+				-- Distance is Max 15 and Min 9
+					if bFallBack == false then
+						ratedPlot.Score = ratedPlot.Score  + (Distance - Base_Major_Distance_Target) * 10
+					else
+						ratedPlot.Score = ratedPlot.Score  + (Distance - Major_Distance_Target) * 10
+					end
+				end
+			end	
+		else
+			local IsNotBreaching_major, Distance_maj = self:__MinorMajorCivBufferCheck(ratedPlot.Plot)
+			local IsNotBreaching_minor, Distance_min = self:__MinorMinorCivBufferCheck(ratedPlot.Plot)
+			if IsNotBreaching_major == false or IsNotBreaching_minor == false then
+				ratedPlot.Score = ratedPlot.Score - 5000;
+			else
+				ratedPlot.Score = ratedPlot.Score  + math.min(Distance_maj - 7,Distance_min - 7) * 50
+			end
+>>>>>>> Stashed changes
 		end
 		
 		
@@ -2045,7 +2178,17 @@ function BBS_AssignStartingPlots:__MinorMinorCivBufferCheck(plot)
     local iMaxStart = GlobalParameters.START_DISTANCE_MINOR_CIVILIZATION_START or 7;
     --iMaxStart = iMaxStart - GlobalParameters.START_DISTANCE_RANGE_MINOR or 2;
 	--local iMaxStart = 7;
+<<<<<<< Updated upstream
 
+=======
+	local minimumdistance = 15
+	if Map.GetMapSize() == 4 then
+		minimumdistance = 16
+	end
+	if Map.GetMapSize() > 4 then
+		minimumdistance = 17
+	end
+>>>>>>> Stashed changes
     local iSourceIndex = plot:GetIndex();
     for i, minorPlotandID in ipairs(self.minorStartPlotsID) do
 		if minorPlotandID.Plot == plot then
@@ -2067,6 +2210,16 @@ function BBS_AssignStartingPlots:__MinorMajorCivBufferCheck(plot)
     if(self.waterMap) then
         iMaxStart = iMaxStart - 1;
     end
+<<<<<<< Updated upstream
+=======
+	local minimumdistance = 15
+	if Map.GetMapSize() == 4 then
+		minimumdistance = 16
+	end
+	if Map.GetMapSize() > 4 then
+		minimumdistance = 17
+	end
+>>>>>>> Stashed changes
     for i, majorPlot in ipairs(self.majorStartPlots) do
 		if majorPlot == plot then
 			return false;
@@ -2087,6 +2240,16 @@ function BBS_AssignStartingPlots:__MajorMajorCivBufferCheck(plot,team)
     end
     iMaxStart = iMaxStart - GlobalParameters.START_DISTANCE_RANGE_MAJOR or 2;
     --local iMaxStart = 10;
+<<<<<<< Updated upstream
+=======
+	local minimumdistance = 15
+	if Map.GetMapSize() == 4 then
+		minimumdistance = 16
+	end
+	if Map.GetMapSize() > 4 then
+		minimumdistance = 17
+	end
+>>>>>>> Stashed changes
     local iSourceIndex = plot:GetIndex();
     for i, majorPlot in ipairs(self.majorStartPlots) do
 		if majorPlot == plot then
