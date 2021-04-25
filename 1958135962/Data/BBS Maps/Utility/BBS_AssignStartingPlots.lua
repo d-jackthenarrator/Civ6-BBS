@@ -521,7 +521,7 @@ function BBS_AssignStartingPlots:__InitStartingData()
 							___Debug("Minor Check:",tempMinorList[i],"spawn present",Players[tempMinorList[i]]:GetStartingPlot():GetX(),Players[tempMinorList[i]]:GetStartingPlot():GetY())
 							table.insert(fallbackmin_spawns, Players[tempMinorList[i]]:GetStartingPlot())
 							else
-							___Debug("Minor Check:",tempMinorList[i],"spawn missing")
+							print("Minor Check:",tempMinorList[i],"spawn missing")
 						end
 					else
 					___Debug("Minor Error:",Players[tempMinorList[i]])
@@ -1086,10 +1086,11 @@ function BBS_AssignStartingPlots:__SettlePlot(ratedBiases, index, player, major,
 				end
             else
 				local IsNotBreaching_major, Distance_maj = self:__MinorMajorCivBufferCheck(ratedBias.Plot)
-				if IsNotBreaching_major ~= false then
+				local IsNotBreaching_minor, Distance_min = self:__MinorMinorCivBufferCheck(ratedBias.Plot)
+				if IsNotBreaching_major ~= false  then
                 self.playerStarts[index + self.iNumMajorCivs] = {};
-                    print("Settled Score :", ratedBias.Score, "Player:",player:GetID(),"Region:",regionIndex, os.date("%c"));
-					___Debug("Settled plot :", ratedBias.Plot:GetX(), ":", ratedBias.Plot:GetY(), "Score :", ratedBias.Score, "Player:",player:GetID(),"Region:",regionIndex);
+                    print("Settled Score :", ratedBias.Score, "Player:",player:GetID(),"Region:",regionIndex, "Distance:", Distance_maj, Distance_min,os.date("%c"));
+					___Debug("Player:",player:GetID(), "Player Name:",PlayerConfigurations[player:GetID()]:GetLeaderTypeName(),"Settled plot :", ratedBias.Plot:GetX(), ":", ratedBias.Plot:GetY(), "Score :", ratedBias.Score, "Region:",regionIndex);
                     settled = true;
                     table.insert(self.playerStarts[index + self.iNumMajorCivs], ratedBias.Plot);
                     table.insert(self.minorStartPlots, ratedBias.Plot)
@@ -1683,6 +1684,11 @@ function BBS_AssignStartingPlots:__GetValidAdjacent(plot, major)
     local toundra = 0;
     local gridWidth, gridHeight = Map.GetGridSize();
     local terrainType = plot:GetTerrainType();
+
+	if(plot:IsWater() == true or plot:IsImpassable() == true) then
+		return false;
+	end
+
 
 	if (self:__NaturalWonderBufferCheck(plot, major) == false) then
 		return false;
