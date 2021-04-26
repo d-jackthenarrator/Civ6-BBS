@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Mod id="c88cba8b-8311-4d35-90c3-51a4a5d6654f" version="161">
+<Mod id="c88cba8b-8311-4d35-90c3-51a4a5d6654f" version="166">
 	<Properties>
 	    <Name>LOC_BBS_TITLE</Name>
 		<Description>LOC_BBS_DESCRIPTION</Description>
@@ -8,12 +8,13 @@
 		<Authors>D. / Jack The Narrator</Authors>
 		<SpecialThanks>Civfanatics.com, CPL, CivFR, 57 Fan, Wazabaza , iElden, Deliverator, VonHolio, Braizh, Kilua, Gedemon, Je, EvilVictor, StormingRomans, Ben</SpecialThanks>
 		<CompatibleVersions>1.2,2.0</CompatibleVersions>
+		<Version>166</Version>
 	</Properties>
 	
 		<LocalizedText>
 		<Text id="LOC_BBS_TITLE">
-			<en_US>Better Balanced Starts 1.6.1</en_US>
-			<fr_FR>Better Balanced Starts 1.6.1</fr_FR>
+			<en_US>Better Balanced Starts 1.6.6</en_US>
+			<fr_FR>Better Balanced Starts 1.6.6</fr_FR>
 		</Text>
 		<Text id="LOC_BBS_TEASER">
 			<en_US>Balanced spawn placement for tournaments.</en_US>
@@ -154,22 +155,26 @@
 	
 	
     <ImportFiles id="Map_BBS">
-      <File>Data/BBS Maps/Continents.lua</File>
-	<File>Data/BBS Maps/Continents_Islands.lua</File>
-	<File>Data/BBS Maps/Fractal.lua</File>
-	<File>Data/BBS Maps/InlandSea.lua</File>
-	<File>Data/BBS Maps/Island_Plates.lua</File>
-	<File>Data/BBS Maps/Lakes.lua</File>
-	<File>Data/BBS Maps/Pangaea.lua</File>
-	<File>Data/BBS Maps/Primordial.lua</File>
-	<File>Data/BBS Maps/Seven_Seas.lua</File>
-	<File>Data/BBS Maps/Shuffle.lua</File>
-	<File>Data/BBS Maps/Splintered_Fractal.lua</File>
-	<File>Data/BBS Maps/Small_Continents.lua</File>
-	<File>Data/BBS Maps/Terra.lua</File>
-	<File>Data/BBS Maps/Tilted_Axis.lua</File>
-	<File>Data/BBS Maps/Archipelago_XP2.lua</File>
+		<Properties>
+        	<LoadOrder>1000</LoadOrder>
+		</Properties>
+      <File>Data/BBS Maps/continents.lua</File>
+	<File>Data/BBS Maps/continents_islands.lua</File>
+	<File>Data/BBS Maps/fractal.lua</File>
+	<File>Data/BBS Maps/inlandsea.lua</File>
+	<File>Data/BBS Maps/island_plates.lua</File>
+	<File>Data/BBS Maps/lakes.lua</File>
+	<File>Data/BBS Maps/pangaea.lua</File>
+	<File>Data/BBS Maps/primordial.lua</File>
+	<File>Data/BBS Maps/seven_seas.lua</File>
+	<File>Data/BBS Maps/shuffle.lua</File>
+	<File>Data/BBS Maps/splintered_fractal.lua</File>
+	<File>Data/BBS Maps/small_continents.lua</File>
+	<File>Data/BBS Maps/terra.lua</File>
+	<File>Data/BBS Maps/tilted_axis.lua</File>
+	<File>Data/BBS Maps/archipelago_xp2.lua</File>
 	<File>Data/BBS Maps/highlands_xp2.lua</File>
+	<File>Data/BBS Maps/wetlands_xp2.lua</File>
 	<File>Data/BBS Maps/perfectworld6.lua</File>
 	<File>Data/BBS Maps/Utility/BBS_NaturalWonderGenerator.lua</File>
 	<File>Data/BBS Maps/Utility/BBS_MountainsCliffs.lua</File>
@@ -323,23 +328,25 @@
     <Files>
 	<File>UI/BBS_UI.lua</File>
 	<File>UI/BBS_UI.xml</File>
-        <File>Data/BBS_D.lua</File>
-	<File>Data/BBS Maps/Continents.lua</File>
-	<File>Data/BBS Maps/Continents_Islands.lua</File>
-	<File>Data/BBS Maps/Fractal.lua</File>
-	<File>Data/BBS Maps/InlandSea.lua</File>
-	<File>Data/BBS Maps/Island_Plates.lua</File>
-	<File>Data/BBS Maps/Lakes.lua</File>
-	<File>Data/BBS Maps/Pangaea.lua</File>
-	<File>Data/BBS Maps/Primordial.lua</File>
-	<File>Data/BBS Maps/Seven_Seas.lua</File>
-	<File>Data/BBS Maps/Shuffle.lua</File>
-	<File>Data/BBS Maps/Splintered_Fractal.lua</File>
-	<File>Data/BBS Maps/Small_Continents.lua</File>
-	<File>Data/BBS Maps/Terra.lua</File>
-	<File>Data/BBS Maps/Tilted_Axis.lua</File>
-	<File>Data/BBS Maps/Archipelago_XP2.lua</File>
+    <File>Data/BBS_D.lua</File>
+    <File>Data/BBS Maps/continents.lua</File>
+	<File>Data/BBS Maps/continents_islands.lua</File>
+	<File>Data/BBS Maps/fractal.lua</File>
+	<File>Data/BBS Maps/inlandsea.lua</File>
+	<File>Data/BBS Maps/island_plates.lua</File>
+	<File>Data/BBS Maps/lakes.lua</File>
+	<File>Data/BBS Maps/pangaea.lua</File>
+	<File>Data/BBS Maps/primordial.lua</File>
+	<File>Data/BBS Maps/seven_seas.lua</File>
+	<File>Data/BBS Maps/shuffle.lua</File>
+	<File>Data/BBS Maps/splintered_fractal.lua</File>
+	<File>Data/BBS Maps/small_continents.lua</File>
+	<File>Data/BBS Maps/terra.lua</File>
+	<File>Data/BBS Maps/tilted_axis.lua</File>
+	<File>Data/BBS Maps/archipelago_xp2.lua</File>
 	<File>Data/BBS Maps/highlands_xp2.lua</File>
+	<File>Data/BBS Maps/wetlands_xp2.lua</File>
+	<File>Data/BBS Maps/perfectworld6.lua</File>
 	<File>Data/BBS Maps/Utility/BBS_NaturalWonderGenerator.lua</File>
 	<File>Data/BBS Maps/Utility/BBS_AssignStartingPlots.lua</File>
 	<File>Data/BBS Maps/Utility/BBS_MountainsCliffs.lua</File>

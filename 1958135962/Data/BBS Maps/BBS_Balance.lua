@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	 BBS_Balance.lua 1.6.5
+--	FILE:	 BBS_Balance.lua 1.6.1
 --	AUTHOR:  D. / Jack The Narrator, 57Fan
 --	PURPOSE: Rebalance the map spawn post placement 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ function BBS_Script()
 		print ("Init: World Age: ", world_age, "1 = New, 2 = Standard 3 = Old");
 		print ("Init: Ridge: ", ridge, "0 = Standard, 1 = Classic, 2 = Large Open 4 = Flat Earth");
 		print ("Init: Sea Level: ", sea_level, "1 = Low Sea Level, 2 = Standard, 3 = High Sea Level");
-		print("Init: Strategic Resources:",MapConfiguration.GetValue("BBSStratRes"), "0 = standard, 1 = abundant, 2 = epic, 3 = spawn guaranteed")
+		print("Init: Strategic Resources:",MapConfiguration.GetValue("BBSStratRes"))
 		local resourcesConfig = MapConfiguration.GetValue("resources");
 		print ("Init: Resources: ", resourcesConfig, "1 = Sparse, 2 = Standard, 3 = Abundant");
 		local startConfig = MapConfiguration.GetValue("start")
@@ -415,8 +415,7 @@ function BBS_Script()
 				--end
 			--end
 		end
-
-		--------------------------------------------------------------------------------------	
+--------------------------------------------------------------------------------------	
 		-- Terraforming
 		--------------------------------------------------------------------------------------
 		if debug_balancing == false then
@@ -428,10 +427,10 @@ function BBS_Script()
 			if major_table[i] ~= nil then
 				if Players[major_table[i]] ~= nil and Players[major_table[i]]:GetTeam() ~= nil and majList[i] ~= nil then
 					print("Player ID:", major_table[i], " Team:", Players[major_table[i]]:GetTeam(), majList[i].civ, majList[i].leader);
-            else
+					else
 					print("Error:",i,major_table[i],"Missing Player")
 				end
-         else
+				else
 				print("Error:",i,major_table[i],"Missing Player")
 			end
 	   end

@@ -295,7 +295,12 @@ include "MapEnums"
 --		Increase the distance penalty to reduce cluster
 --		Increase the coastal value to reduce inland spawn for civ with several biases
 --		Fixed a minor error that would sometime lead a tile to be changed twice.
-
+-- 1.6.2
+--		Fixed CS first meet issue
+-- 1.6.4
+--		Wetlands map are now supported
+--		Maori will have distance check when placed with other player (only support one Maori for now)
+--		Shorter loading time
 
 
 -- Code structure: Code is run right before the first turn starts
@@ -312,7 +317,7 @@ include "MapEnums"
 --	Run spawn correction Coastal (failsafe to prevent harbor blocked by reefs) 
 --	Run Choke point analysis (prevent crashes)
 
-g_version = "1.6.1"
+g_version = "1.6.6"
 
 -----------------------------------------------------------------------------
 function __Debug(...)
@@ -349,10 +354,10 @@ function Clean()
 
 
 		for i = 1, major_count do
-			if (PlayerConfigurations[major_table[i]]:GetLeaderTypeName() ~= "LEADER_SPECTATOR" and PlayerConfigurations[major_table[i]]:GetHandicapTypeID() ~= 2021024770 and PlayerConfigurations[major_table[i]]:GetLeaderTypeName() ~= "LEADER_KUPE") then
+			if (PlayerConfigurations[major_table[i]]:GetLeaderTypeName() ~= "LEADER_SPECTATOR"  and PlayerConfigurations[major_table[i]]:GetLeaderTypeName() ~= "LEADER_KUPE") then
 				local pStartPlot_i = Players[major_table[i]]:GetStartingPlot()
 				for j = 1, major_count do
-					if (PlayerConfigurations[major_table[j]]:GetLeaderTypeName() ~= "LEADER_SPECTATOR" and PlayerConfigurations[major_table[j]]:GetHandicapTypeID() ~= 2021024770 and PlayerConfigurations[major_table[j]]:GetLeaderTypeName() ~= "LEADER_KUPE" and major_table[i] ~= major_table[j]) then
+					if (PlayerConfigurations[major_table[j]]:GetLeaderTypeName() ~= "LEADER_SPECTATOR"  and PlayerConfigurations[major_table[j]]:GetLeaderTypeName() ~= "LEADER_KUPE" and major_table[i] ~= major_table[j]) then
 						local pStartPlot_j = Players[major_table[j]]:GetStartingPlot()
 						local distance = 99;
 						if pStartPlot_i ~= nil and pStartPlot_j ~= nil then
@@ -398,8 +403,10 @@ function Clean()
 				end
 			end
 		end
+		
 		-- Minor Minor
 		local bmin = false
+		local killed_ids = {}
 		for i = 1, minor_count do
 			local pStartPlot_i = Players[minor_table[i]]:GetStartingPlot()
 			for j = 1, minor_count do
@@ -409,14 +416,25 @@ function Clean()
 						__Debug("I:", minor_table[i],"J:", minor_table[j],"Distance:",distance)
 						if (distance < 6  ) or pStartPlot_i == pStartPlot_j then
 							-- Let's kill a CS to avoid a CS settler roaming and breaking CPL rules
-							local playerUnits = {};
-							playerUnits = Players[minor_table[j]]:GetUnits();
-							if playerUnits ~= nil then
-								for _, unit in playerUnits:Members() do
-									playerUnits:Destroy(unit)			
+							local bkill = true
+							if killed_ids ~= nil then
+								for n, ids in ipairs(killed_ids) do
+									if ids == minor_table[i] or ids == minor_table[j] then
+										bkill = false
+									end
 								end
 							end
-							print("Minor failure module: Minor Player", PlayerConfigurations[minor_table[j]]:GetCivilizationTypeName()," has been eliminated (too close to minor).",distance)
+							if bkill == true then
+								local playerUnits = {};
+								playerUnits = Players[minor_table[j]]:GetUnits();
+								if playerUnits ~= nil then
+									for _, unit in playerUnits:Members() do
+										playerUnits:Destroy(unit)			
+									end
+								end
+								print("Minor failure module: Minor Player", PlayerConfigurations[minor_table[j]]:GetCivilizationTypeName()," has been eliminated (too close to minor).",distance)
+								table.insert(killed_ids,minor_table[j])
+							end
 						end
 				end	
 			end
@@ -440,13 +458,8 @@ function Init_D_Balance()
 	if (Game:GetProperty("BBS_INIT_COUNT") == nil) then
 		Game:SetProperty("BBS_INIT_COUNT",1)
 		Clean()
-		else
-		Game:SetProperty("BBS_INIT_COUNT",Game:GetProperty("BBS_INIT_COUNT")+1)
 	end
 	print ("Turn: ", Game.GetCurrentGameTurn(),os.date())	
-	if ( Game:GetProperty("BBS_INIT_COUNT") ) > 1 then
-		print ("Init: ", Game:GetProperty("BBS_INIT_COUNT")," times.")
-	end
 
 end
 
