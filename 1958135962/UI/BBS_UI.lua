@@ -4,8 +4,6 @@ local g_version = "1.6"
 print("-------------- BBS UI v"..g_version.." -D- Init --------------")
 -------------------------------------------------------------------------------
 
-
-
 function OnLoadScreenClose()
 	if (Game:GetProperty("BBS_INIT_COUNT") ~= nil) then
 		print(Game:GetProperty("BBS_INIT_COUNT"))
