@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.5
+--	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.7
 --	AUTHOR:  D. / Jack The Narrator
 --	PURPOSE: Custom Spawn Placement Script
 ------------------------------------------------------------------------------
@@ -25,6 +25,7 @@ local Teamers_Ref_team = nil
 local g_negative_bias = {}
 local g_custom_bias = {}
 local g_evaluated_plots = {}
+local g_large_islands = {}
 local Major_Distance_Target = 16
 local Base_Major_Distance_Target = 16
 local Minor_Distance_Target = 0
@@ -78,8 +79,18 @@ function BBS_AssignStartingPlots.Create(args)
 			table.insert(g_custom_bias, tmp)
 		end
 	end
-
-	
+	if (MapConfiguration.GetValue("MAP_SCRIPT") == "Pangaea.lua"
+	or MapConfiguration.GetValue("MAP_SCRIPT") == "Continents.lua"
+	or MapConfiguration.GetValue("MAP_SCRIPT") == "Terra.lua") then
+	print("Calculating Island Size: Start", os.date("%c"));
+	for iPlotIndex = 0, Map.GetPlotCount()-1, 1 do
+		local pPlot = Map.GetPlotByIndex(iPlotIndex)
+		if pPlot ~= nil and (pPlot:IsCoastalLand() or iPlotIndex == Map.GetPlotCount()-1) then
+			local tmp = GetIslandPerimeter(pPlot,false,true,iPlotIndex == Map.GetPlotCount()-1)
+		end
+	end
+	print("Calculating Island Size: End", os.date("%c"));
+	end
 	local instance = {}
 	if MapConfiguration.GetValue("MAP_SCRIPT") == "Pangaea.lua" then
 		Major_Distance_Target = 18
@@ -1770,6 +1781,47 @@ function BBS_AssignStartingPlots:__GetValidAdjacent(plot, major)
 		return false
 	end
 	end
+	
+	if (major == true) 
+	and (MapConfiguration.GetValue("MAP_SCRIPT") == "Continents.lua"
+	or MapConfiguration.GetValue("MAP_SCRIPT") == "Terra.lua") then
+		local perimeter = GetIslandPerimeter(plot)
+		local min_size = 50
+		if Map.GetMapSize() == 4 then
+				min_size = 65
+				elseif Map.GetMapSize() == 5 then
+				min_size = 75
+				elseif Map.GetMapSize() > 3 then
+				min_size = 80
+				else
+				min_size = 35
+			end	
+		if perimeter ~= nil and perimeter < min_size then
+			print("Tiny Island", perimeter, plot:GetX(), plot:GetY())
+			return false;
+		end
+	end
+	
+	if (major == true) 
+	and (MapConfiguration.GetValue("MAP_SCRIPT") == "Pangaea.lua") then
+		local perimeter = GetIslandPerimeter(plot)
+		local min_size = 55
+		if Map.GetMapSize() == 4 then
+				min_size = 70
+				elseif Map.GetMapSize() == 5 then
+				min_size = 80
+				elseif Map.GetMapSize() > 3 then
+				min_size = 85
+				else
+				min_size = 35
+			end	
+		if perimeter ~= nil and perimeter < min_size then
+			print("Tiny Island", perimeter, plot:GetX(), plot:GetY())
+			return false;
+		end
+	end
+	
+	
 
     if(impassable >= 4 and not self.waterMap and major == true) then
         return false;
@@ -3186,3 +3238,581 @@ local count = 0
 	end
 
 end
+
+---------------------------------------
+function GetIslandPerimeter(plot,B_debug,B_first_layer,B_report)
+	-- This is a function to compute the number of tiles around the islands to determinate their sizekey
+	
+	if plot == nil or plot:GetX() == nil then
+		return -1
+	end
+	local gridWidth, gridHeight = Map.GetGridSize();
+
+	--if plot:GetX() == 50 and plot:GetY() == 53 then
+	--	B_debug = true 
+	--end
+	if B_debug == true then
+		print("CHECKING",	plot:GetX(),plot:GetY())
+	end
+	local orig_X = plot:GetX()
+	local orig_Y = plot:GetY()
+	local coaststart_plot = {}
+	local count = 0
+	-- Is True Coast
+	local b_true_coast = false
+	for w = 0, 5 do 
+		if(plot:GetX() >= 0 and plot:GetY() < gridHeight) then 
+		local test_plot = Map.GetAdjacentPlot(plot:GetX(), plot:GetY(), w)
+			if test_plot ~= nil and test_plot:IsWater() and test_plot:IsLake() == false and test_plot:IsNaturalWonder() == false then
+				b_true_coast = true
+				break
+			end
+		end
+	end	
+	
+	if (b_true_coast == true) then
+		coaststart_plot = plot
+		if B_debug == true then
+			print("VALID COASTAL",	coaststart_plot:GetX(),coaststart_plot:GetY())
+		end
+		else
+		if B_debug == true then
+			print("NOT VALID COASTAL")
+		end
+		for x = orig_X, gridWidth, 1 do
+			local check_plot = Map.GetPlot(x,orig_Y)
+			if check_plot ~= nil  then
+				for w = 0, 5 do 
+					if(check_plot:GetX() >= 0 and check_plot:GetY() < gridHeight) then 
+						local test_plot = Map.GetAdjacentPlot(check_plot:GetX(), check_plot:GetY(), w)
+						if test_plot ~= nil and test_plot:IsWater() and test_plot:IsLake() == false and test_plot:IsNaturalWonder() == false then
+							b_true_coast = true
+							break
+						end
+					end
+				end
+				if b_true_coast == true then
+					if B_debug == true then
+						print("FOUND TRUE OCEAN")
+					end
+					coaststart_plot = check_plot
+					break
+				end
+			end
+		end
+		if coaststart_plot == nil or b_true_coast == false then
+			if B_debug == true then
+				print("SCAN FOR NEAREST COAST")
+			end
+			for x = orig_X, 0, -1 do
+				local check_plot = Map.GetPlot(x,orig_Y)
+				if check_plot ~= nil then
+					local b_true_coast = false
+					for w = 0, 5 do 
+						if(check_plot:GetX() >= 0 and check_plot:GetY() < gridHeight) then 
+							local test_plot = Map.GetAdjacentPlot(check_plot:GetX(), check_plot:GetY(), w)
+							if test_plot ~= nil and test_plot:IsWater() and test_plot:IsLake() == false and test_plot:IsNaturalWonder() == false then
+								b_true_coast = true
+								break
+							end
+						end
+					end
+					if b_true_coast == true then
+						coaststart_plot = check_plot
+						break
+					end
+				end
+			end		
+		end	
+		if coaststart_plot == nil then
+			return 666
+		end
+	end
+
+	-- Check if not already existing large Island
+	local cache_count = 0 
+	if g_large_islands ~= nil then
+		if B_debug == true then
+		print("CHECKING: Closest Coastal",	plot:GetX(),plot:GetY())
+		end
+		local b_already_calculated = false
+		for i, island in ipairs(g_large_islands) do
+			for p, plot in ipairs(island) do 
+				if plot == coaststart_plot then
+					b_already_calculated = true
+					break
+				end
+			end
+			if b_already_calculated == true then
+				count = 0
+				for p, plot in ipairs(island) do 
+					count = count + 1
+				end
+				if B_debug == true then
+					print("ALREADY CALCULATED",	coaststart_plot:GetX(),coaststart_plot:GetY(),count,"ISLAND #",i)
+				end
+				if count > 60 then
+					if B_debug == true then
+						print("BIG ENOUGH STOP HERE",	coaststart_plot:GetX(),coaststart_plot:GetY())
+					end		
+					return count
+					else
+					cache_count = count
+					break
+				end
+				else
+				if B_debug == true then
+					print("NOT ALREADY CALCULATED",	coaststart_plot:GetX(),coaststart_plot:GetY())
+				end				
+			end
+		end
+		else
+		if B_debug == true then
+		print("CHECKING: Closest Coastal Failed")
+		end
+		return -1
+	end
+
+	-- calculate the perimeter
+	local perimeter_plot = {}
+	count = 0
+	table.insert(perimeter_plot,coaststart_plot)
+	count = count + 1
+	local active_plot = {} 
+	local previous_plot = {} 
+	active_plot = coaststart_plot
+	previous_plot = coaststart_plot
+	local lower_bound = 0
+	local upper_bound = 5
+	local dead_end = false
+	local inc = 1
+	for i = 0, 100 do
+		for d = lower_bound, upper_bound, inc do
+			if active_plot ~= nil and active_plot:GetX() ~= nil and active_plot:GetY() ~= nil and gridHeight ~= nil then
+				if(active_plot:GetX() >= 0 and active_plot:GetY() < (gridHeight - 1) and active_plot:GetY() > 0) then 
+					local adj_plot = Map.GetAdjacentPlot(active_plot:GetX(), active_plot:GetY(), d)
+					if B_debug == true then
+						print("CHECK:",active_plot:GetX(),active_plot:GetY(),d,adj_plot:GetX(),adj_plot:GetY(),adj_plot:IsCoastalLand())
+					end
+					local b_already_found = false
+					local b_true_ocean = false
+					-- add snow / ICE
+					if adj_plot ~= nil and adj_plot:IsWater() == false and (adj_plot:GetTerrainType() ~= 15 and adj_plot:GetTerrainType() ~= 16) then
+						for w = 0, 5 do 
+							if(adj_plot:GetX() >= 0 and adj_plot:GetY() < gridHeight) then 
+								local test_plot = Map.GetAdjacentPlot(adj_plot:GetX(), adj_plot:GetY(), w)
+								if test_plot ~= nil and test_plot:IsWater() and test_plot:IsLake() == false then
+									b_true_ocean = true
+									break
+								end
+							end
+						end
+					end
+					for p, perim_plot in ipairs(perimeter_plot) do
+						if perim_plot == adj_plot then
+							b_already_found = true
+							break
+						end
+					end
+					if b_already_found == false and adj_plot ~= nil and b_true_ocean == true and adj_plot:IsWater() == false and (adj_plot:GetTerrainType() ~= 15 and adj_plot:GetTerrainType() ~= 16) then
+						table.insert(perimeter_plot,adj_plot)
+						if B_debug == true then
+							print("ADD A:",adj_plot:GetX(),adj_plot:GetY(),count,"WAS AT",active_plot:GetX(),active_plot:GetY())
+						end
+						count = count + 1
+						previous_plot = active_plot
+						active_plot = adj_plot
+						break
+					end
+					-- reaching a top border / bottom 
+				elseif active_plot:GetY() == gridHeight - 1 or active_plot:GetY() ==  0 then
+					if B_debug == true then
+						print("BORDER:",active_plot:GetX(),active_plot:GetY())
+					end
+					local low_p = 2
+					local high_p = 4
+					local inc_p = 1
+					if active_plot:GetY() ==  0 then
+						low_p = 0
+						high_p = 1
+						inc_p = 1
+					end
+			
+					local b_moved_away = false
+					local adj_plot = Map.GetAdjacentPlot(active_plot:GetX(), active_plot:GetY(), 1)
+					if adj_plot ~= nil and adj_plot:IsCoastalLand() == false and (adj_plot:GetTerrainType() ~= 15 and adj_plot:GetTerrainType() ~= 16) then
+						local b_already_found = false
+						for p, perim_plot in ipairs(perimeter_plot) do
+							if perim_plot == adj_plot then
+								b_already_found = true
+								break
+							end
+						end
+						if b_already_found == false then
+							table.insert(perimeter_plot,adj_plot)
+							if B_debug == true then
+							print("ADD B:",adj_plot:GetX(),adj_plot:GetY(),count,"WAS AT",active_plot:GetX(),active_plot:GetY())
+							end
+							count = count + 1
+							previous_plot = active_plot
+							active_plot = adj_plot
+							break
+						end
+				
+					elseif adj_plot ~= nil and adj_plot:IsCoastalLand() == true and (adj_plot:GetTerrainType() ~= 15 and adj_plot:GetTerrainType() ~= 16) then
+						local b_already_found = false
+						for p, perim_plot in ipairs(perimeter_plot) do
+							if perim_plot == adj_plot then
+								b_already_found = true
+								break
+							end
+						end
+						if b_already_found == false then
+							table.insert(perimeter_plot,adj_plot)
+							count = count + 1
+							previous_plot = adj_plot
+							for n = low_p, high_p, inc_p do
+								adj_plot = Map.GetAdjacentPlot(previous_plot:GetX(), previous_plot:GetY(), n)
+								if adj_plot ~= nil and adj_plot:IsCoastalLand() == true and (adj_plot:GetTerrainType() ~= 15 and adj_plot:GetTerrainType() ~= 16) then
+									b_already_found = false
+									for p, perim_plot in ipairs(perimeter_plot) do
+										if perim_plot == adj_plot then
+											b_already_found = true
+											break
+										end
+									end
+									if b_already_found == false then
+										table.insert(perimeter_plot,adj_plot)
+										if B_debug == true then
+											print("ADD C:",adj_plot:GetX(),adj_plot:GetY(),count,"WAS AT",previous_plot:GetX(),previous_plot:GetY())
+										end
+										count = count + 1
+										active_plot = adj_plot
+										b_moved_away = true
+										break
+									end	
+								end
+							end
+						end				
+					end
+					if b_moved_away == true then
+						break
+					end
+					local adj_plot = Map.GetAdjacentPlot(active_plot:GetX(), active_plot:GetY(), 4)
+					low_p = 2
+					high_p = 4
+					inc_p = -1
+					if active_plot:GetY() ==  0 then
+						low_p = 4
+						high_p = 5
+						inc_p = -1
+					end		
+					if adj_plot ~= nil and adj_plot:IsCoastalLand() == false and (adj_plot:GetTerrainType() ~= 15 and adj_plot:GetTerrainType() ~= 16) then
+						local b_already_found = false
+						for p, perim_plot in ipairs(perimeter_plot) do
+							if perim_plot == adj_plot then
+								b_already_found = true
+								break
+							end
+						end
+						if b_already_found == false then
+							table.insert(perimeter_plot,adj_plot)
+							count = count + 1
+							previous_plot = active_plot
+							active_plot = adj_plot
+							break
+						end
+				
+					elseif adj_plot ~= nil and adj_plot:IsCoastalLand() == true and (adj_plot:GetTerrainType() ~= 15 and adj_plot:GetTerrainType() ~= 16) then
+						local b_already_found = false
+						for p, perim_plot in ipairs(perimeter_plot) do
+							if perim_plot == adj_plot then
+								b_already_found = true
+								break
+							end
+						end
+						if b_already_found == false then
+							table.insert(perimeter_plot,adj_plot)
+							count = count + 1
+							previous_plot = adj_plot
+							for n = high_p, low_p, inc_p do
+								adj_plot = Map.GetAdjacentPlot(previous_plot:GetX(), previous_plot:GetY(), n)
+								if adj_plot ~= nil and adj_plot:IsCoastalLand() == true and (adj_plot:GetTerrainType() ~= 15 and adj_plot:GetTerrainType() ~= 16) then
+									b_already_found = false
+									for p, perim_plot in ipairs(perimeter_plot) do
+										if perim_plot == adj_plot then
+											b_already_found = true
+											break
+										end
+									end
+									if b_already_found == false then
+										table.insert(perimeter_plot,adj_plot)
+										if B_debug == true then
+											print("ADD D:",adj_plot:GetX(),adj_plot:GetY(),count,"WAS AT",previous_plot:GetX(),previous_plot:GetY())
+										end
+										count = count + 1
+										active_plot = adj_plot
+										b_moved_away = true
+										break
+									end	
+								end
+							end
+						end				
+					end
+				end
+			end
+
+		
+			if d == upper_bound then
+			-- Check for ice.
+			local b_ice = false
+			if(active_plot:GetY() < gridHeight / 0.25) then 
+				for t = 1, 4, 1 do
+					local test_plot = Map.GetAdjacentPlot(active_plot:GetX(), active_plot:GetY(), t)
+					if test_plot ~= nil and test_plot:IsWater() == false then
+						for w = 0, 5 do 
+							if(test_plot:GetX() >= 0 and test_plot:GetY() < gridHeight+1) then 
+								local check_plot = Map.GetAdjacentPlot(test_plot:GetX(), test_plot:GetY(), w)
+								if check_plot ~= nil and check_plot:IsWater() and check_plot:IsLake() == false then
+									active_plot = test_plot
+									if B_debug == true then
+										print("ADD E:",test_plot:GetX(),test_plot:GetY(),count,"WAS AT",previous_plot:GetX(),previous_plot:GetY())
+									end
+									count = count + 1
+									b_ice = true
+									break
+								end
+							end
+						end
+					end
+				end	
+
+				elseif active_plot:GetY() > gridHeight / 0.75 then
+				for t = 0, 5, 1 do
+					local test_plot = Map.GetAdjacentPlot(active_plot:GetX(), active_plot:GetY(), t)
+					if test_plot ~= nil and test_plot:IsWater() == false then
+						for w = 0, 5 do 
+							if(test_plot:GetX() >= 0 and test_plot:GetY() < gridHeight+1) then 
+								local check_plot = Map.GetAdjacentPlot(test_plot:GetX(), test_plot:GetY(), w)
+								if check_plot ~= nil and check_plot:IsWater() and check_plot:IsLake() == false then
+									active_plot = test_plot
+									if B_debug == true then
+										print("ADD F:",test_plot:GetX(),test_plot:GetY(),count,"WAS AT",previous_plot:GetX(),previous_plot:GetY())
+									end
+									count = count + 1
+									b_ice = true
+									break
+								end
+							end
+						end
+					end
+				end	
+			end
+			if b_ice == true then
+				break
+				-- Break the ice, Got it !?
+			end
+			if active_plot == previous_plot then
+				if B_debug == true then
+					print("STUCK:",active_plot:GetX(),active_plot:GetY(),count)
+				end
+				break
+				else
+				active_plot = previous_plot
+			end
+			end
+		
+		end
+		
+		if active_plot == previous_plot and active_plot ~= coaststart_plot then
+			local land_tile = 0
+			for d = 0, 5 do
+				if active_plot ~= nil then
+					if(active_plot:GetX() >= 0 and active_plot:GetY() < gridHeight) then 
+						local adj_plot = Map.GetAdjacentPlot(active_plot:GetX(), active_plot:GetY(), d)
+						if adj_plot ~= nil and adj_plot:IsWater() == false then
+							land_tile = land_tile + 1
+						end
+					end
+				end
+			end
+			if land_tile < 3 or dead_end == true then
+				if dead_end == false then
+					lower_bound = 5
+					upper_bound = 0
+					inc = -1
+					active_plot = coaststart_plot
+					previous_plot = coaststart_plot
+					dead_end = true
+					else
+					break
+				end
+			end
+		elseif active_plot == previous_plot and active_plot == coaststart_plot then 
+			-- one tile island
+			if B_debug == true then
+				print("STUCK ON ONE TILE:",active_plot:GetX(),active_plot:GetY(),count)
+				break
+			end
+		end
+	end
+	
+	-- Building the cache
+	if count > 4 then
+		-- Check if we do not have already found a coast line.
+		if B_debug == true then
+			print("BIG ENOUGH TO ADD",count)
+		end
+		local b_already_cached = false
+		local island_index = -1
+		if g_large_islands ~= nil then
+			for i, island in ipairs(g_large_islands) do 
+				for m, freshplot in ipairs(perimeter_plot) do
+					for p, plot in ipairs(island) do	
+						if plot == freshplot then
+							b_already_cached = true
+							island_index = i
+							if B_debug == true then
+								print("FOUND EXISTING ISLAND",i)
+							end
+							break
+						end
+					end
+					if b_already_cached == true then
+						break
+					end
+				end
+				if b_already_cached == true then
+					break
+				end
+			end
+			if b_already_cached == true and island_index ~= -1 then
+				for m, freshplot in ipairs(perimeter_plot) do
+					local b_is_new_plot = true
+					for p, plot in ipairs(g_large_islands[island_index]) do
+						if plot == freshplot then
+							--print("MATCH",freshplot:GetX(),freshplot:GetY(),"TO ISLAND",plot:GetX(),plot:GetY(),island_index)
+							b_is_new_plot = false
+							break
+							else
+							--print("DO NOT MATCH",freshplot:GetX(),freshplot:GetY(),"TO ISLAND",plot:GetX(),plot:GetY(),island_index)
+						end		
+					end
+					if b_is_new_plot == true then
+						table.insert(g_large_islands[island_index],freshplot)
+						if B_debug == true then
+							print("ADDED",freshplot:GetX(),freshplot:GetY(),"TO ISLAND",island_index)
+						end
+					else
+						if B_debug == true then
+							print("ALREADY THERE",freshplot:GetX(),freshplot:GetY(),"TO ISLAND",island_index)
+						end				
+					end
+				end
+			end
+		end
+		if b_already_cached == false then
+			table.insert(g_large_islands,perimeter_plot)
+			if B_debug == true then
+				print("NEW ISLAND",perimeter_plot)
+			end
+		end
+	else
+		if B_debug == true then
+			print("TOO SMALL TO ADD",count)
+		end
+	end
+	if B_debug == true then
+		print("RETURN --------------------------------------------------------------------------------------------",count, cache_count)
+	end
+	if count < 60 then
+		if B_debug == true then
+		print("PLOT",plot:GetX(),plot:GetY(),count,cache_count)
+		end
+	end
+	
+	-- Check duplicate
+	if B_first_layer == true and B_report == true then
+	local count_island = 0
+	if g_large_islands ~= nil then
+		for i, island in ipairs(g_large_islands) do 
+			count_island = count_island + 1 
+		end
+	end
+	if count_island > 1 then
+		local b_is_continuous = false
+		for i, island in ipairs(g_large_islands) do 
+			for j, island_duplicate in ipairs(g_large_islands) do 
+				if island ~= island_duplicate and island ~= nil and island_duplicate ~= nil then
+					for p, plot in ipairs(island) do
+						for n, plot_duplicate in ipairs(island_duplicate) do
+							if plot ~= nil and plot_duplicate ~= nil and plot:GetX() == plot_duplicate:GetX() and plot:GetY() == plot_duplicate:GetY() then
+								if B_debug == true then
+								print("IS CONTINOUS",plot:GetX(),plot:GetY(),"Island A",i,"island B",j)
+								print("IS CONTINOUS",plot_duplicate:GetX(),plot_duplicate:GetY(),"Island A",i,"island B",j)
+								end
+								b_is_continuous = true
+								break
+							end
+						end
+						if b_is_continuous == true then
+							if B_debug == true then
+							print("IS CONTINOUS",plot:GetX(),plot:GetY(),"Island A",i,"island B",j)
+							end
+							break
+						end
+					end
+					if b_is_continuous == true then
+						for n, plot_duplicate in ipairs(island_duplicate) do
+							local b_new_plot = true 
+							for p, plot in ipairs(island) do
+								if plot == plot_duplicate then
+									b_new_plot = false
+									break
+								end
+							end
+							if b_new_plot == true then
+								if B_debug == true then
+								print("ADD PLOT","Island A",i,plot_duplicate:GetX(),plot_duplicate:GetY()," From Island B",j)
+								end
+								table.insert(g_large_islands[i],plot_duplicate)
+							end
+						end
+						if B_debug == true then
+						print("DELETE DUPLICATE:",j)
+						end
+						g_large_islands[j] = nil
+						break
+					end
+				end
+			end	
+			b_is_continuous = false
+		end	
+	end
+	end
+	
+	if B_report == true then
+		if g_large_islands ~= nil then
+			for i, island in ipairs(g_large_islands) do
+				local size = 0
+				local ref_plot = nil
+				for p, plot in ipairs(island) do
+					if plot ~= nil then
+						size = size + 1
+						ref_plot = plot
+					end
+				end
+				print("ISLAND #",i,"SIZE",size,"ANCHOR",ref_plot:GetX(),ref_plot:GetY())
+			end		
+			else
+			print("NO LARGE ISLANDS DETECTED")
+		end
+	end
+	if cache_count > count then
+		return cache_count
+		else
+		return count
+	end
+	
+end
+	

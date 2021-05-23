@@ -1,5 +1,5 @@
-------------------------------------------------------------------------------
---	FILE:	 BBS_Balance.lua 1.6.5
+ ------------------------------------------------------------------------------
+--	FILE:	 BBS_Balance.lua 1.6.7
 --	AUTHOR:  D. / Jack The Narrator, 57Fan
 --	PURPOSE: Rebalance the map spawn post placement 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1761,8 +1761,10 @@ function EvaluateStartingLocation(plot)
 					temp_tile = adjacentPlot:GetYield(g_YIELD_FOOD) 
 					if temp_tile > 1 then
 						temp_tile = temp_tile + adjacentPlot:GetYield(g_YIELD_PRODUCTION) * 1.5 + adjacentPlot:GetYield(g_YIELD_GOLD) * 0.25;
-						else -- not enough food to value those tiles fully
+						elseif adjacentPlot:GetYield(g_YIELD_PRODUCTION) < 3.5 then -- not enough food to value those tiles fully
 						temp_tile = temp_tile + adjacentPlot:GetYield(g_YIELD_PRODUCTION) * 0.5 + adjacentPlot:GetYield(g_YIELD_GOLD) * 0;
+						else
+						temp_tile = temp_tile + adjacentPlot:GetYield(g_YIELD_PRODUCTION) * 0.75 + adjacentPlot:GetYield(g_YIELD_GOLD) * 0;
 					end
 					
 					-- Adjust for non discovered resources
@@ -1870,8 +1872,10 @@ function EvaluateStartingLocation(plot)
 					
 					if temp_tile > 1 then
 						temp_tile = temp_tile + adjacentPlot:GetYield(g_YIELD_PRODUCTION) * 1.5 + adjacentPlot:GetYield(g_YIELD_GOLD) * 0.25;
-						else -- not enough food to value those tiles fully
+						elseif adjacentPlot:GetYield(g_YIELD_PRODUCTION) < 3.5 then -- not enough food to value those tiles fully
 						temp_tile = temp_tile + adjacentPlot:GetYield(g_YIELD_PRODUCTION) * 0.5 + adjacentPlot:GetYield(g_YIELD_GOLD) * 0;
+						else
+						temp_tile = temp_tile + adjacentPlot:GetYield(g_YIELD_PRODUCTION) * 0.75 + adjacentPlot:GetYield(g_YIELD_GOLD) * 0;
 					end
 
 			-- Adjust for non discovered resources
