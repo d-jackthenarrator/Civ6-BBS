@@ -8,7 +8,6 @@ ExposedMembers.LuaEvents = LuaEvents
 include "MapEnums"
 include "SupportFunctions"
 
-local bBiasFail = false; 
 local world_age = 2;
 local high_roll = 0.15;
 local bHighRoll = false;
@@ -217,15 +216,7 @@ function BBS_Script()
 			iBalancingTwo = iBalancingTwo + 3;
 		end
 
-		if (Game:GetProperty("BBS_RESPAWN") ~= nil) then 
-			if (Game:GetProperty("BBS_RESPAWN") == false) then
-				bBiasFail = true; 
-				else
-				bBiasFail = false; 
-			end
-			else
-			bBiasFail = true; 
-		end
+
 		
 		--
 		--if (GameConfiguration.GetValue("BalancingTypeThree") and GameConfiguration.GetValue("BalancingTypeThree") ~= nil) then 
@@ -238,8 +229,7 @@ function BBS_Script()
 		--end
 		iBalancingFour = 0;
 
-		print ("D TURN STARTING: Initialisation:");
-		print ("Init: ", Game:GetProperty("BBS_INIT_COUNT")," time.")
+
 		print ("Init: Global Parameters: Natural Wonder Buffer:", GlobalParameters.START_DISTANCE_MAJOR_NATURAL_WONDER)
 		print ("Init: Global Parameters: City-State Buffer:", GlobalParameters.START_DISTANCE_MINOR_MAJOR_CIVILIZATION)
 		print ("Init: Global Parameters: Major Civs Buffer:", GlobalParameters.START_DISTANCE_MAJOR_CIVILIZATION - GlobalParameters.START_DISTANCE_RANGE_MAJOR)
@@ -1512,11 +1502,6 @@ function BBS_Script()
 				end
 				print ("BBS Script - Completed", os.date("%c"), "Player", i,Locale.Lookup(PlayerConfigurations[major_table[i]]:GetPlayerName()) ,"Food adjustement:", (tempEval[5]-majList[i].food_adjust), "Production adjustement:", (tempEval[6]-majList[i].prod_adjust) );
 				print ("S1-S2-S3:", majList[i].best_tile, majList[i].best_tile_2,majList[i].best_tile_3,"I1-I2:",majList[i].best_tile_inner,majList[i].best_tile_inner_2,"2:2 Base?",majList[i].isBase22)
-				if (bBiasFail == true) then
-					Game:SetProperty("BBS_SAFE_MODE",true)
-					else
-					Game:SetProperty("BBS_SAFE_MODE",false)
-				end
 			end
 
 		end
@@ -1531,8 +1516,6 @@ function BBS_Script()
 		TerrainBuilder.AnalyzeChokepoints()
 		-- Coast -> Lake
 		AreaBuilder.Recalculate();
-		-- Flag for the UI
-		Game:SetProperty("BBS_PLOT_HIDDEN",false)
 		-- Fix the Volcano bug
 		for iPlotIndex = 0, Map.GetPlotCount()-1, 1 do
 			local pPlot = Map.GetPlotByIndex(iPlotIndex)

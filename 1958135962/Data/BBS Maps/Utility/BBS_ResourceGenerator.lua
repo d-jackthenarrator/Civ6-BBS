@@ -526,7 +526,7 @@ function BBS_ResourceGenerator:__GetStrategicResources()
 	end
 	if (MapConfiguration.GetValue("BBSStratRes") == 2) then
 		print("Set Strategic Resources to Epic")
-		def_weight = 1.5
+		def_weight = 2.5
 	end
 	for row in GameInfo.Resource_Distribution() do
 		if (row.Continents == self.iNumContinents) then

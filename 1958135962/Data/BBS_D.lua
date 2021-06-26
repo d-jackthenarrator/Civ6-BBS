@@ -301,6 +301,10 @@ include "MapEnums"
 --		Wetlands map are now supported
 --		Maori will have distance check when placed with other player (only support one Maori for now)
 --		Shorter loading time
+-- 1.6.8
+--		Better Data Reporting
+--		General Cleanup
+--		Epic Strategic Setting should feel more Epic
 
 
 -- Code structure: Code is run right before the first turn starts
@@ -317,7 +321,7 @@ include "MapEnums"
 --	Run spawn correction Coastal (failsafe to prevent harbor blocked by reefs) 
 --	Run Choke point analysis (prevent crashes)
 
-g_version = "1.6.6"
+g_version = "1.6.8"
 
 -----------------------------------------------------------------------------
 function __Debug(...)
@@ -392,6 +396,13 @@ function Clean()
 								playerUnits:Destroy(unit)			
 							end
 							print("Minor failure module: Minor Player", PlayerConfigurations[minor_table[j]]:GetCivilizationTypeName()," has been eliminated (too close to major).",distance)
+							local dead = Game:GetProperty("BBS_MINOR_FAILING_TOTAL")
+							if dead == nil then
+								Game:SetProperty("BBS_MINOR_FAILING_TOTAL",1)
+								else
+								dead = tonumber(dead) + 1
+								Game:SetProperty("BBS_MINOR_FAILING_TOTAL",dead)
+							end
 						end
 					end
 				end
@@ -433,6 +444,13 @@ function Clean()
 									end
 								end
 								print("Minor failure module: Minor Player", PlayerConfigurations[minor_table[j]]:GetCivilizationTypeName()," has been eliminated (too close to minor).",distance)
+															local dead = Game:GetProperty("BBS_MINOR_FAILING_TOTAL")
+							if dead == nil then
+								Game:SetProperty("BBS_MINOR_FAILING_TOTAL",1)
+								else
+								dead = tonumber(dead) + 1
+								Game:SetProperty("BBS_MINOR_FAILING_TOTAL",dead)
+							end
 								table.insert(killed_ids,minor_table[j])
 							end
 						end
@@ -455,20 +473,21 @@ function Init_D_Balance()
 	print ("------------- BBS Script v"..g_version.." -D- Init -------------");
 	print ("---------------------------------------------------------");
 
-	if (Game:GetProperty("BBS_INIT_COUNT") == nil) then
-		Game:SetProperty("BBS_INIT_COUNT",1)
+	if Game.GetCurrentGameTurn() == GameConfiguration.GetStartTurn() then
 		Clean()
+	end
+	if Game.GetCurrentGameTurn() == GameConfiguration.GetStartTurn() + 1 then
+		Game:SetProperty("BBS_DISTANCE_ERROR",nil)
+		Game:SetProperty("BBS_RESPAWN",nil)
+		Game:SetProperty("BBS_MINOR_FAILING_TOTAL",nil)
+		Game:SetProperty("BBS_MAJOR_DISTANCE",nil)
+		Game:SetProperty("BBS_ITERATION",nil)
 	end
 	print ("Turn: ", Game.GetCurrentGameTurn(),os.date())	
 
 end
 
 
---LuaEvents.UIOnLocalPlayerHidePlotsEvent.Add( OnLocalPlayerHidePlots )
---LuaEvents.UIOnLocalPlayerRevealPlotsEvent.Add( OnLocalPlayerRevealPlots )
---LuaEvents.UIOnLocalPlayerTotalRevealPlotsEvent.Add( OnLocalPlayerTotalRevealPlots )
---LuaEvents.UIOnLocalPlayerTotalHidePlotsEvent.Add( OnLocalPlayerTotalHidePlots )
---LuaEvents.UIOnLocalPlayerRevealSpawnEvent.Add ( OnLocalPlayerRevealSpawn );
 
 
 Init_D_Balance();

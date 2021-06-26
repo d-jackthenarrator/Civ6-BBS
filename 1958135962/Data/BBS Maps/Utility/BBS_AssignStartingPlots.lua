@@ -146,7 +146,7 @@ function BBS_AssignStartingPlots.Create(args)
 	end	
 	
 	Base_Major_Distance_Target = Major_Distance_Target
-	
+	Game:SetProperty("BBS_MAJOR_DISTANCE",Major_Distance_Target)
 	instance  = {
         -- Core Process member methods
         __InitStartingData					= BBS_AssignStartingPlots.__InitStartingData,
@@ -375,8 +375,10 @@ function BBS_AssignStartingPlots:__InitStartingData()
 	local bEndIteration = false
 	bMinDistance = false
 	
+	local try = 1
+	Game:SetProperty("BBS_ITERATION",try)
 	for k = 1,8 do
-	
+		
 	if bEndIteration ~= true then
 		self.fallbackPlots = {}
 		self.regionTracker = {}
@@ -616,6 +618,9 @@ function BBS_AssignStartingPlots:__InitStartingData()
 				Major_Distance_Target = Major_Distance_Target - 1
 				Minor_Distance_Target = Minor_Distance_Target - 1				
 			end
+			try = try + 1
+			Game:SetProperty("BBS_MAJOR_DISTANCE",Major_Distance_Target)
+			Game:SetProperty("BBS_ITERATION",try)
 			bRepeatPlacement = true			  
 			if Major_Distance_Target < 9 then
 				Major_Distance_Target = 9
