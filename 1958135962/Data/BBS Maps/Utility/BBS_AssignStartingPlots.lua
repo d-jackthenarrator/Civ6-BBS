@@ -91,7 +91,13 @@ function BBS_AssignStartingPlots.Create(args)
 	end
 	print("Calculating Island Size: End", os.date("%c"));
 	end
+   
+   ___Debug("Map Script: ", MapConfiguration.GetValue("MAP_SCRIPT"));
 	local instance = {}
+   if MapConfiguration.GetValue("MAP_SCRIPT") == "Highlands_XP2.lua" or MapConfiguration.GetValue("MAP_SCRIPT") == "Seven_Seas.lua" then
+		Major_Distance_Target = 21
+	end
+   
 	if MapConfiguration.GetValue("MAP_SCRIPT") == "Pangaea.lua" then
 		Major_Distance_Target = 18
 	end	
