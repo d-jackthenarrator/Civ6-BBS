@@ -1161,6 +1161,13 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 				end
 			end	
 		end
+      
+      -- oasis - not settleable
+      if (plot:GetFeatureType() == 4) then
+         ratedPlot.Score = ratedPlot.Score - 5000;
+         bskip = true;
+         ___Debug("Found oasis, gonna apply negative score");
+      end
 		
 		if (major == false) then
 			local IsNotBreaching_major, Distance_maj = self:__MinorMajorCivBufferCheck(ratedPlot.Plot)
@@ -1170,6 +1177,8 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 				bskip = true
 			end
 		end
+      
+      
 		
 		if 	(bskip == false or (bRepeatPlacement == true and major == true)) and region_index ~= -1 then
 		
