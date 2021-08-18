@@ -94,8 +94,12 @@ function BBS_AssignStartingPlots.Create(args)
    
    ___Debug("Map Script: ", MapConfiguration.GetValue("MAP_SCRIPT"));
 	local instance = {}
-   if MapConfiguration.GetValue("MAP_SCRIPT") == "Highlands_XP2.lua" or MapConfiguration.GetValue("MAP_SCRIPT") == "Seven_Seas.lua" then
+   if MapConfiguration.GetValue("MAP_SCRIPT") == "Highlands_XP2.lua" then
 		Major_Distance_Target = 21
+	end
+   
+   if MapConfiguration.GetValue("MAP_SCRIPT") == "Seven_Seas.lua" then
+		Major_Distance_Target = 19
 	end
    
 	if MapConfiguration.GetValue("MAP_SCRIPT") == "Pangaea.lua" then
