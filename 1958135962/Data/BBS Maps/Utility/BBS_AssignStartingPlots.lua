@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.7
+--	FILE:	BBS_AssignStartingPlot.lua    -- 1.6.9
 --	AUTHOR:  D. / Jack The Narrator
 --	PURPOSE: Custom Spawn Placement Script
 ------------------------------------------------------------------------------
@@ -91,8 +91,12 @@ function BBS_AssignStartingPlots.Create(args)
 	end
 	print("Calculating Island Size: End", os.date("%c"));
 	end
+   ___Debug("Map Script: ", MapConfiguration.GetValue("MAP_SCRIPT"));																	 
 	local instance = {}
-	if MapConfiguration.GetValue("MAP_SCRIPT") == "Pangaea.lua" then
+	   if MapConfiguration.GetValue("MAP_SCRIPT") == "Highlands_XP2.lua" then
+		Major_Distance_Target = 21
+	end
+	if MapConfiguration.GetValue("MAP_SCRIPT") == "Pangaea.lua"  or MapConfiguration.GetValue("MAP_SCRIPT") == "Seven_Seas.lua" then
 		Major_Distance_Target = 18
 	end	
 	if MapConfiguration.GetValue("MAP_SCRIPT") == "Terra.lua" then
@@ -1155,7 +1159,13 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 				end
 			end	
 		end
-		
+      
+      -- oasis - not settleable
+      if (plot:GetFeatureType() == 4) then
+         ratedPlot.Score = ratedPlot.Score - 5000;
+         bskip = true;
+         ___Debug("Found oasis, gonna apply negative score");
+      end							   
 		if (major == false) then
 			local IsNotBreaching_major, Distance_maj = self:__MinorMajorCivBufferCheck(ratedPlot.Plot)
 			local IsNotBreaching_minor, Distance_min = self:__MinorMinorCivBufferCheck(ratedPlot.Plot)
@@ -1575,6 +1585,7 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 			local count_desert = 0
 			local count_tundra = 0
 			local count_flood = 0
+			local count_snow = 0				 
 			for k = 60, 30, -1 do
 				local scanPlot = GetAdjacentTiles(ratedPlot.Plot, k)
 				if scanPlot ~= nil then
@@ -1589,6 +1600,10 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 						count_desert = count_desert + 1
 					
 					end
+               
+               if (scanPlot:GetTerrainType() ==  g_TERRAIN_TYPE_SNOW or scanPlot:GetTerrainType() ==  g_TERRAIN_TYPE_SNOW_HILLS) then
+                  count_snow = count_snow + 1;
+               end																																	 
 					
 					if (scanPlot:GetFeatureType() == g_FEATURE_FLOODPLAINS or scanPlot:GetFeatureType() == g_FEATURE_FLOODPLAINS_PLAINS or scanPlot:GetFeatureType() == g_FEATURE_FLOODPLAINS_GRASSLAND ) then
 					
@@ -1612,6 +1627,12 @@ function BBS_AssignStartingPlots:__RateBiasPlots(biases, startPlots, major, regi
 			if count_tundra > 5 and foundBiasToundra == false then
 				region_bonus = region_bonus - 250
 			end
+         
+         -- fix for cs in snow
+         if count_snow > 2 and foundBiasToundra == false then
+				region_bonus = region_bonus - 2500
+            ___Debug("Snow malus: ", count_snow )
+			end							  
 			if count_desert > 5 and foundBiasDesert == false then
 				region_bonus = region_bonus - 250
 			end

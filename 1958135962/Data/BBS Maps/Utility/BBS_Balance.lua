@@ -1,5 +1,5 @@
  ------------------------------------------------------------------------------
---	FILE:	 BBS_Balance.lua 1.6.7
+--	FILE:	 BBS_Balance.lua 1.6.9
 --	AUTHOR:  D. / Jack The Narrator, 57Fan
 --	PURPOSE: Rebalance the map spawn post placement 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -417,7 +417,7 @@ function BBS_Script()
         for i = 1, major_count do
 			if major_table[i] ~= nil then
 				if Players[major_table[i]] ~= nil and Players[major_table[i]]:GetTeam() ~= nil and majList[i] ~= nil then
-					--print("Player ID:", major_table[i], " Team:", Players[major_table[i]]:GetTeam(), majList[i].civ, majList[i].leader);
+					print("Player ID:", major_table[i], " Team:", Players[major_table[i]]:GetTeam(), majList[i].civ, majList[i].leader);
 					else
 					print("Error:",i,major_table[i],"Missing Player")
 				end
@@ -1741,14 +1741,82 @@ function EvaluateStartingLocation(plot)
                     -- Gets the food and production counts
                    	food_spawn_start = food_spawn_start + adjacentPlot:GetYield(g_YIELD_FOOD);
                     prod_spawn_start = prod_spawn_start + adjacentPlot:GetYield(g_YIELD_PRODUCTION);
-					temp_tile = adjacentPlot:GetYield(g_YIELD_FOOD) 
+					temp_food = adjacentPlot:GetYield(g_YIELD_FOOD)
+					temp_prd = adjacentPlot:GetYield(g_YIELD_PRODUCTION)
+					temp_gold = adjacentPlot:GetYield(g_YIELD_GOLD)
+					temp_tile = 0;
+               
+               
+               
+               -- low food amount, tile will be worth less
+               if temp_food <= 1 then
+               
+                  if temp_prd <= 2 then
+                     temp_tile = temp_food + temp_prd * 0.5;
+                  -- 1/3 tile, worth somehow more
+                  elseif temp_prd == 3 then
+                     temp_tile = temp_food + temp_prd * 1.0 + temp_gold * 0.25;
+                  elseif temp_prd == 4 then
+                     temp_tile = temp_food + temp_prd * 1.50 + temp_gold * 0.25;
+                  else
+                     __Debug("I have found a plain tile with more than 4 production !");
+                     temp_tile = temp_food + temp_prd * 1.50 + temp_gold * 0.25;
+                  end
+                  
+               elseif temp_food == 2 then
+                  
+                  if temp_prd <= 2 then
+                     temp_tile = temp_food + temp_prd * 1.5 + temp_gold * 0.25;
+                  elseif temp_prd == 3 then
+                     temp_tile = temp_food + temp_prd * 1.5 + temp_gold * 0.25;
+                  else
+                     __Debug("I have found a grassland tile with more than 3 production !");
+                     temp_tile = temp_food + temp_prd * 1.75 + temp_gold * 0.25;
+                  end
+                  
+               elseif temp_food == 3 then
+               
+                  if temp_prd <= 1 then
+                     temp_tile = temp_food + temp_prd * 1.5 + temp_gold * 0.25;
+                  elseif temp_prd == 2 then
+                     temp_tile = temp_food + temp_prd * 1.75 + temp_gold * 0.25;
+                  else
+                     __Debug("I have found a tile with more than 3 food AND production !");
+                     temp_tile = temp_food + temp_prd * 1.75 + temp_gold * 0.25;
+                  end
+               elseif temp_food == 4 then
+                  if temp_prd == 0 then
+                     temp_tile = temp_food;
+                  else
+                     __Debug("I have found a tile with 4 food AND production !");
+                     temp_tile = temp_food + temp_prd * 1.75 + temp_gold * 0.25;
+                  end
+                  
+               elseif temp_food == 5 then
+                  if temp_prd == 0 then
+                     temp_tile = temp_food;
+                  else
+                     __Debug("I have found a tile with 5 food AND production !");
+                     temp_tile = temp_food + temp_prd * 1.75 + temp_gold * 0.25;
+                  end
+                  
+               else
+                  __Debug("I have found a tile with 6 food!");
+                  temp_tile = temp_food + temp_prd * 1.75 + temp_gold * 0.25;
+                  
+               end
+               
+                  
+                  
+               --[[
 					if temp_tile > 1 then
 						temp_tile = temp_tile + adjacentPlot:GetYield(g_YIELD_PRODUCTION) * 1.5 + adjacentPlot:GetYield(g_YIELD_GOLD) * 0.25;
-						elseif adjacentPlot:GetYield(g_YIELD_PRODUCTION) < 3.5 then -- not enough food to value those tiles fully
+               elseif adjacentPlot:GetYield(g_YIELD_PRODUCTION) < 3.5 then -- not enough food to value those tiles fully
 						temp_tile = temp_tile + adjacentPlot:GetYield(g_YIELD_PRODUCTION) * 0.5 + adjacentPlot:GetYield(g_YIELD_GOLD) * 0;
-						else
+               else
 						temp_tile = temp_tile + adjacentPlot:GetYield(g_YIELD_PRODUCTION) * 0.75 + adjacentPlot:GetYield(g_YIELD_GOLD) * 0;
 					end
+               --]]
 					
 					-- Adjust for non discovered resources
 					if(adjacentPlot:GetResourceType() ~= -1) then
@@ -3458,7 +3526,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							ResourceBuilder.SetResourceType(target_plot_1, -1);
 							ResourceBuilder.SetResourceType(target_plot_1, 2, 1)
 							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/1/2 Copper Grassland Hill");
-							placed_yield = 4.5
+							placed_yield = 4.0
 						end
 
 					end -- close target if
@@ -3475,152 +3543,228 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 				end
 				
 				-- Plains
-				elseif ( target_plot_1:GetTerrainType() == 3 or target_plot_1:GetTerrainType() == 4 or (target_plot_1:GetTerrainType() == 5 and flag ~= 3 and target_plot_1:GetFeatureType() ~= g_FEATURE_VOLCANO)) then
-					
-				if ( target_plot_1:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_PLAINS or ( target_plot_1:GetFeatureType() == g_FEATURE_FLOODPLAINS_PLAINS and flag ~= 4) ) then
-					-- +5.5 on Plains		
-					rng = TerrainBuilder.GetRandomNumber(100,"test")/100
-					
-					if (flag == 1 or flag == 2) then
-						target_yield = math.min(target_yield,5.5)
-					end
-					
-					
-					if (target_yield >= 5.75) then
+         elseif ( target_plot_1:GetTerrainType() == 3 or target_plot_1:GetTerrainType() == 4 or (target_plot_1:GetTerrainType() == 5 and flag ~= 3 and target_plot_1:GetFeatureType() ~= g_FEATURE_VOLCANO)) then
+	 
+																																								 
 						
-						if (rng >= 0.9) then
-								-- Forested Hill with Deer
-								TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								TerrainBuilder.SetFeatureType(target_plot_1,3);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 4, 1)
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/4 Forested Plain Hill with Deer");
-								placed_yield = 6
-								
-							elseif (rng >= 0.75 and rng < 0.9) then
-								-- Forested Plain Hill
-								TerrainBuilder.SetTerrainType(target_plot_1,4);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								TerrainBuilder.SetFeatureType(target_plot_1,3);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/3 Forested Plain Hill");
-								placed_yield = 5.5
-								
-							elseif (rng >= 0 and rng < 0.75) then
-								-- Banana Jungle Hill
-								
-								if (target_plot_1:GetY() > gridHeight * 0.25 and target_plot_1:GetY() < gridHeight * 0.75) then
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									ResourceBuilder.SetResourceType(target_plot_1, 0, 1);
-									TerrainBuilder.SetFeatureType(target_plot_1,2);
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/2 Jungle Plain Hill with Banana");
-									placed_yield = 6.5
-									
-									elseif rng > 0.55 then
-									-- Forested Plain Hill
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									TerrainBuilder.SetFeatureType(target_plot_1,3);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									ResourceBuilder.SetResourceType(target_plot_1, 4, 1)
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/4 Forested Plain Hill with Deer");
-									placed_yield = 6
-									
-									else
-									-- Sheep Plain Hill
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									ResourceBuilder.SetResourceType(target_plot_1, 7, 1)
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Plain Hill with Sheep");	
-									placed_yield = 5
-									
-								end
-							else
+														 
+	 
+									 
+											   
+		
+	 
+					
+            if ( target_plot_1:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_PLAINS or ( target_plot_1:GetFeatureType() == g_FEATURE_FLOODPLAINS_PLAINS and flag ~= 4) ) then
+               -- +5.5 on Plains		
+               rng = TerrainBuilder.GetRandomNumber(100,"test")/100
+               
+               if (flag == 1 or flag == 2) then
+														 
+													   
+														   
+															
+																																	   
+                  target_yield = math.min(target_yield,5.5)
+               end
+               
+               
+               if (target_yield >= 5.75) then
+                  
+                  if (rng >= 0.9) then
+                        -- Forested Hill with Deer
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,3);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 4, 1)
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/4 Forested Plain Hill with Deer");
+                        placed_yield = 6
+                        
+                     
+                        
+                  elseif (rng >= 0 and rng < 0.90) then
+                        -- Banana Jungle Hill
+                     
+                     if (target_plot_1:GetY() > gridHeight * 0.25 and target_plot_1:GetY() < gridHeight * 0.75) then
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 0, 1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,2);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/2 Jungle Plain Hill with Banana");
+                        placed_yield = 6.5
+                        
+                     elseif rng > 0.75 then
+                        -- Forested Plain Hill deer
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,3);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 4, 1)
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/4 Forested Plain Hill with Deer");
+                        placed_yield = 6
+                        
+                     else
+                        -- Sheep Plain Hill
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 7, 1)
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Plain Hill with Sheep");	
+                        placed_yield = 5
+                        
+                     end
+                  end
 
-						end
+		 
+	   
+															   
+	   
+						   
+						  
+													   
+														
+														   
+															 
+																														  
+						
+		 
+											  
+		
+																									  
 							
-						elseif (target_yield < 5.75 and target_yield > 4.75) then
+														
+														 
+															
+														
+																															
+						 
+			
+						   
+														
+														 
+															
+															  
+																														   
+						 
+		  
+			   
+	   
+						  
+	   
+							 
+																									 
+													   
+														
+														   
+															
+													   
+																																  
+						  
+		   
+							 
+								   
+													   
+														
+													   
+														   
+															 
+																																  
+						  
+			
 							
-						if (rng >= 0.75) then
-								-- Hill with Sheep
-								TerrainBuilder.SetTerrainType(target_plot_1,4);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Sheep Plain Hill");
-								placed_yield = 5
-									
-							elseif (rng >= 0.0 and rng < 0.75) then
-								
-							if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
-								-- Jungle Plain Hill
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									TerrainBuilder.SetFeatureType(target_plot_1,2);
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Jungle Plain Hill");
-									placed_yield = 5
-								else
-									-- Hill with Sheep
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Sheep Plain Hill");
-									placed_yield = 5
-							end
-						end						
-							
-						else -- yield < 4.75
-							
-							-- Banana Jungle Plain
-						if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
-								TerrainBuilder.SetTerrainType(target_plot_1,3);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1,0, 1);
-								TerrainBuilder.SetFeatureType(target_plot_1,2);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/1 Jungle Plain with Banana");
-								placed_yield = 4.5
-							else
-								if (rng >= 0.25) then
-								-- Forested Plain With Deer
-								TerrainBuilder.SetTerrainType(target_plot_1,3);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								TerrainBuilder.SetFeatureType(target_plot_1,3);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 4, 1);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/3 Forested Plain with Deer");
-								placed_yield = 4.5
-								else
-								-- Copper Plain Hill
-								TerrainBuilder.SetTerrainType(target_plot_1,4);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 2, 1)
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/2/2 Copper Plain Hill");
-								placed_yield = 4
-								end
-						end
+													   
+														
+														   
+															
+																															 
+						
+		   
+		 
 
-							
-					end -- close target
-						
-					else
-						
-						-- floodplains and floodplains Civs
-					if (target_plot_1:GetResourceCount() < 1 and target_plot_1:GetFeatureType() ~= g_FEATURE_OASIS) then
-							ResourceBuilder.SetResourceType(target_plot_1, 9, 1)
-							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/0 Wheat Plains Floodplains");
-					end
-					placed_yield = 3	
-						
-				end
+   
+               elseif (target_yield < 5.75 and target_yield > 4.75) then
+                     
+                  if (rng >= 0.75) then
+                        -- Hill with Sheep
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Sheep Plain Hill");
+                        placed_yield = 5
+                           
+                  elseif (rng >= 0.0 and rng < 0.75) then
+                        
+                     if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
+                        -- Jungle Plain Hill
+                           TerrainBuilder.SetTerrainType(target_plot_1,4);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           TerrainBuilder.SetFeatureType(target_plot_1,2);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Jungle Plain Hill");
+                           placed_yield = 5
+                        else
+                           -- Hill with Sheep
+                           TerrainBuilder.SetTerrainType(target_plot_1,4);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Sheep Plain Hill");
+                           placed_yield = 5
+                     end
+                  end						
+                     
+                  else -- yield < 4.75
+                     
+                     -- Banana Jungle Plain
+                     if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
+                           TerrainBuilder.SetTerrainType(target_plot_1,3);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           ResourceBuilder.SetResourceType(target_plot_1,0, 1);
+                           TerrainBuilder.SetFeatureType(target_plot_1,2);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/1 Jungle Plain with Banana");
+		
+                           placed_yield = 4.5
+                     else
+	   
 
+                        if (rng >= 0.5) then 
+                           -- Forested Plain With Deer
+                           TerrainBuilder.SetTerrainType(target_plot_1,3);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           TerrainBuilder.SetFeatureType(target_plot_1,3);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           ResourceBuilder.SetResourceType(target_plot_1, 4, 1);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/3 Forested Plain with Deer");
+                           placed_yield = 4.0
+                        else
+                           -- plain hill with forest
+                           TerrainBuilder.SetTerrainType(target_plot_1,4);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           TerrainBuilder.SetFeatureType(target_plot_1,3);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/3 Plain hill with forest");
+                           placed_yield = 4.0
+                        end
+
+                     end
+                  end
+
+                     
+               -- close target
+                  
+            else
+                  
+                  -- floodplains and floodplains Civs
+               if (target_plot_1:GetResourceCount() < 1 and target_plot_1:GetFeatureType() ~= g_FEATURE_OASIS) then
+                     ResourceBuilder.SetResourceType(target_plot_1, 9, 1)
+                     __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/0 Wheat Plains Floodplains");
+               end
+               placed_yield = 3	
+                  
+            end
 				-- Desert
 				elseif ( target_plot_1:GetTerrainType() == 6 or target_plot_1:GetTerrainType() == 7 or (target_plot_1:GetTerrainType() == 8 and flag ~= 3 and target_plot_1:GetFeatureType() ~= g_FEATURE_VOLCANO)) then
 					
@@ -3838,7 +3982,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							ResourceBuilder.SetResourceType(target_plot_1, -1);
 							ResourceBuilder.SetResourceType(target_plot_1, 2, 1)
 							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/1/2 Copper Grassland Hill");
-							placed_yield = 4.5
+							placed_yield = 4.0
 						end
 
 					end -- close target if
@@ -3854,151 +3998,221 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 					
 				end
 				
-				-- Plains
+		-- Plains
 				elseif ( target_plot_1:GetTerrainType() == 3 or target_plot_1:GetTerrainType() == 4 or (target_plot_1:GetTerrainType() == 5 and flag ~= 3 and target_plot_1:GetFeatureType() ~= g_FEATURE_VOLCANO)) then
 					
 				if ( target_plot_1:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_PLAINS or ( target_plot_1:GetFeatureType() == g_FEATURE_FLOODPLAINS_PLAINS and flag ~= 4) ) then
-					-- +5.5 on Plains		
-					rng = TerrainBuilder.GetRandomNumber(100,"test")/100
-					
-					if (flag == 1 or flag == 2) then
-						target_yield = math.min(target_yield,5.5)
-					end
-					
-					
-					if (target_yield >= 5.75) then
-						
-						if (rng >= 0.9) then
-								-- Forested Hill with Deer
-								TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								TerrainBuilder.SetFeatureType(target_plot_1,3);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 4, 1)
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/4 Forested Plain Hill with Deer");
-								placed_yield = 6
-								
-							elseif (rng >= 0.75 and rng < 0.9) then
-								-- Forested Plain Hill
-								TerrainBuilder.SetTerrainType(target_plot_1,4);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								TerrainBuilder.SetFeatureType(target_plot_1,3);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/3 Forested Plain Hill");
-								placed_yield = 5.5
-								
-							elseif (rng >= 0 and rng < 0.75) then
-								-- Banana Jungle Hill
-								
-							if (target_plot_1:GetY() > gridHeight * 0.25 and target_plot_1:GetY() < gridHeight * 0.75) then
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									ResourceBuilder.SetResourceType(target_plot_1, 0, 1);
-									TerrainBuilder.SetFeatureType(target_plot_1,2);
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/2 Jungle Plain Hill with Banana");
-									placed_yield = 6.5
-									
-								elseif rng > 0.55 then
-									-- Forested Plain Hill
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									TerrainBuilder.SetFeatureType(target_plot_1,3);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									ResourceBuilder.SetResourceType(target_plot_1, 4, 1)
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/4 Forested Plain Hill with Deer");
-									placed_yield = 6
-									
-								else
-									-- Sheep Plain Hill
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									ResourceBuilder.SetResourceType(target_plot_1, 7, 1)
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Plain Hill with Sheep");	
-									placed_yield = 5
-									
-							end
+               -- +5.5 on Plains		
+               rng = TerrainBuilder.GetRandomNumber(100,"test")/100
+               
+               if (flag == 1 or flag == 2) then
+                  target_yield = math.min(target_yield,5.5)
+               end
+               
+               
+               if (target_yield >= 5.75) then
+                  
+                  if (rng >= 0.9) then
+                     -- Forested Hill with Deer
+                     TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                     TerrainBuilder.SetFeatureType(target_plot_1,3);
+                     ResourceBuilder.SetResourceType(target_plot_1, -1);
+                     ResourceBuilder.SetResourceType(target_plot_1, 4, 1)
+                     __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/4 Forested Plain Hill with Deer");
+                     placed_yield = 6
+                        
+                     
+                        
+                  elseif (rng >= 0 and rng < 0.90) then
+							  
+													   
+														
+													   
+														   
+																															 
+						  
+		
+											
+                        -- Banana Jungle Hill
+                     
+                     if (target_plot_1:GetY() > gridHeight * 0.25 and target_plot_1:GetY() < gridHeight * 0.75) then
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 0, 1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,2);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/2 Jungle Plain Hill with Banana");
+                        placed_yield = 6.5
+                        
+                     elseif rng > 0.75 then
+                        -- Forested Plain Hill deer
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,3);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 4, 1)
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/4 Forested Plain Hill with Deer");
+                        placed_yield = 6
+                        
+                     else
+                        -- Sheep Plain Hill
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 7, 1)
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Plain Hill with Sheep");	
+                        placed_yield = 5
+                        
+                     end
+                  end
 
-						end
+		 
+	   
+															   
+	   
+						   
+						  
+													   
+														
+														   
+															 
+																														  
+						
+		 
+											  
+		
+																									  
 							
-						elseif (target_yield < 5.75 and target_yield > 4.75) then
+														
+														 
+															
+														
+																															
+						 
+			
+						   
+														
+														 
+															
+															  
+																														   
+						 
+		  
+			   
+	   
+						  
+	   
+							 
+																									 
+													   
+														
+														   
+															
+													   
+																																  
+						  
+		   
+							 
+								   
+													   
+														
+													   
+														   
+															 
+																																  
+						  
+			
 							
-						if (rng >= 0.75) then
-								-- Hill with Sheep
-								TerrainBuilder.SetTerrainType(target_plot_1,4);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Sheep Plain Hill");
-								placed_yield = 5
-									
-							elseif (rng >= 0.0 and rng < 0.75) then
-								
-							if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
-								-- Jungle Plain Hill
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									TerrainBuilder.SetFeatureType(target_plot_1,2);
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Jungle Plain Hill");
-									placed_yield = 5
-								else
-									-- Hill with Sheep
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Sheep Plain Hill");
-									placed_yield = 5
-							end
-						end						
-							
-						else -- yield < 4.75
-							
-							-- Banana Jungle Plain
-						if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
-								TerrainBuilder.SetTerrainType(target_plot_1,3);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1,0, 1);
-								TerrainBuilder.SetFeatureType(target_plot_1,2);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/1 Jungle Plain with Banana");
-								placed_yield = 4.5
-							else
-								if (rng >= 0.25) then
-								-- Forested Plain With Deer
-								TerrainBuilder.SetTerrainType(target_plot_1,3);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								TerrainBuilder.SetFeatureType(target_plot_1,3);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 4, 1);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/3 Forested Plain with Deer");
-								placed_yield = 4.5
-								else
-								-- Copper Plain Hill
-								TerrainBuilder.SetTerrainType(target_plot_1,4);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 2, 1)
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/2/2 Copper Plain Hill");
-								placed_yield = 4
-								end
-						end
+													   
+														
+														   
+															
+																															 
+						
+		   
+		 
 
-							
-					end -- close target
-						
-					else
-						
-						-- floodplains and floodplains Civs
-					if (target_plot_1:GetResourceCount() < 1 and target_plot_1:GetFeatureType() ~= g_FEATURE_OASIS) then
-							ResourceBuilder.SetResourceType(target_plot_1, 9, 1)
-							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/0 Wheat Plains Floodplains");
-					end
-					placed_yield = 3	
-						
-				end
+   
+               elseif (target_yield < 5.75 and target_yield > 4.75) then
+                     
+                  if (rng >= 0.75) then
+                        -- Hill with Sheep
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Sheep Plain Hill");
+                        placed_yield = 5
+                           
+                  elseif (rng >= 0.0 and rng < 0.75) then
+                        
+                     if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
+                        -- Jungle Plain Hill
+                           TerrainBuilder.SetTerrainType(target_plot_1,4);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           TerrainBuilder.SetFeatureType(target_plot_1,2);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Jungle Plain Hill");
+                           placed_yield = 5
+                        else
+                           -- Hill with Sheep
+                           TerrainBuilder.SetTerrainType(target_plot_1,4);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 2/2 Sheep Plain Hill");
+                           placed_yield = 5
+                     end
+                  end						
+                     
+                  else -- yield < 4.75
+                     
+                     -- Banana Jungle Plain
+                     if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
+                        TerrainBuilder.SetTerrainType(target_plot_1,3);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1,0, 1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,2);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/1 Jungle Plain with Banana");
+                        placed_yield = 4.5
+                     else
+                        if (rng >= 0.5) then 
+                           -- Forested Plain With Deer
+                           TerrainBuilder.SetTerrainType(target_plot_1,3);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           TerrainBuilder.SetFeatureType(target_plot_1,3);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           ResourceBuilder.SetResourceType(target_plot_1, 4, 1);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/3 Forested Plain with Deer");
+                           placed_yield = 4.0
+                        else
+                           -- plain hill with forest
+                           TerrainBuilder.SetTerrainType(target_plot_1,4);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           TerrainBuilder.SetFeatureType(target_plot_1,3);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 1/3 Plain hill with forest");
+                           placed_yield = 4.0
+                        end
+
+                     end
+                  end
+
+                     
+               -- close target
+                  
+            else
+                  
+                  -- floodplains and floodplains Civs
+               if (target_plot_1:GetResourceCount() < 1 and target_plot_1:GetFeatureType() ~= g_FEATURE_OASIS) then
+                     ResourceBuilder.SetResourceType(target_plot_1, 9, 1)
+                     __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Added 3/0 Wheat Plains Floodplains");
+               end
+               placed_yield = 3	
+                  
+            end
 
 				-- Desert
 				elseif ( target_plot_1:GetTerrainType() == 6 or target_plot_1:GetTerrainType() == 7 or (target_plot_1:GetTerrainType() == 8 and flag ~= 3 and target_plot_1:GetFeatureType() ~= g_FEATURE_VOLCANO)) then
@@ -4178,7 +4392,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 					
 					if (target_yield < 5.75 and target_yield > 4.75) then
 							
-						if (rng >= 0.75) then
+						if (rng >= 0.70) then
 							-- Flat Deer Forest
 							TerrainBuilder.SetTerrainType(target_plot_1,0);
 							TerrainBuilder.SetFeatureType(target_plot_1,-1);
@@ -4188,7 +4402,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Grassland Forest with Deers");
 							placed_yield = 5
 							
-							elseif (rng >= 0.45 and rng < 0.75) then
+							elseif (rng >= 0.35 and rng < 0.70) then
 							-- Forested Hill
 							TerrainBuilder.SetTerrainType(target_plot_1,1);
 							TerrainBuilder.SetFeatureType(target_plot_1,-1);
@@ -4197,7 +4411,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Forested Grassland Hill");
 							placed_yield = 5
 							
-							elseif (rng >= 0.15 and rng < 0.45) then
+							else
 							-- Stone Hill
 							TerrainBuilder.SetTerrainType(target_plot_1,1);
 							TerrainBuilder.SetFeatureType(target_plot_1,-1);
@@ -4205,27 +4419,29 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							ResourceBuilder.SetResourceType(target_plot_1, 8, 1)
 							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Stone Grassland Hill");
 							placed_yield = 5
-							
-							elseif (rng >= 0.0 and rng < 0.15) then
-							-- Copper Hill
-							TerrainBuilder.SetTerrainType(target_plot_1,1);
-							TerrainBuilder.SetFeatureType(target_plot_1,-1);
-							ResourceBuilder.SetResourceType(target_plot_1, -1);
-							ResourceBuilder.SetResourceType(target_plot_1, 2, 1)
-							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/1/2 Copper Grassland Hill");
-							placed_yield = 5
-							
+						
 						end
 
 						elseif target_yield > 4.25 then -- yield below 4.75
 						
-						-- Hill with Sheep
-						TerrainBuilder.SetTerrainType(target_plot_1,1);
-						TerrainBuilder.SetFeatureType(target_plot_1,-1);
-						ResourceBuilder.SetResourceType(target_plot_1, -1);
-						ResourceBuilder.SetResourceType(target_plot_1, 7, 1)
-						__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 3/1 Sheep Grassland Hill");
-						placed_yield = 4.5
+                  if (rng >= 0.0 and rng < 0.80) then
+                     -- Hill with Sheep
+                     TerrainBuilder.SetTerrainType(target_plot_1,1);
+                     TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                     ResourceBuilder.SetResourceType(target_plot_1, -1);
+                     ResourceBuilder.SetResourceType(target_plot_1, 7, 1)
+                     __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 3/1 Sheep Grassland Hill");
+                     placed_yield = 4.5
+                  
+                  else
+                     -- Copper Hill
+                     TerrainBuilder.SetTerrainType(target_plot_1,1);
+                     TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                     ResourceBuilder.SetResourceType(target_plot_1, -1);
+                     ResourceBuilder.SetResourceType(target_plot_1, 2, 1)
+                     __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/1/2 Copper Grassland Hill");
+                     placed_yield = 4
+                  end											
 						
 						else
 						
@@ -4247,8 +4463,8 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 					end
 					
 				end
-				
-				-- Plains
+
+		-- Plains
 				elseif ( target_plot_1:GetTerrainType() == 3 or target_plot_1:GetTerrainType() == 4 or (target_plot_1:GetTerrainType() == 5 and flag ~= 3 and target_plot_1:GetFeatureType() ~= g_FEATURE_VOLCANO)) then
 					
 				if ( target_plot_1:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_PLAINS or ( target_plot_1:GetFeatureType() == g_FEATURE_FLOODPLAINS_PLAINS and flag ~= 4) ) then
@@ -4257,7 +4473,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 					
 					if (target_yield < 5.25 and target_yield > 4.75) then
 							
-						if (rng >= 0.75) then
+						if (rng >= 0.50) then
 								-- Hill with Sheep
 								TerrainBuilder.SetTerrainType(target_plot_1,4);
 								TerrainBuilder.SetFeatureType(target_plot_1,-1);
@@ -4265,68 +4481,101 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 								ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
 								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Sheep Plain Hill");
 								placed_yield = 5
+
+                  else
 								
-							elseif (rng >= 0.25 and rng < 0.75) then
-								-- Copper Plain Hill
-								TerrainBuilder.SetTerrainType(target_plot_1,4);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 2, 1)
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/2/2 Copper Plain Hill");
-								placed_yield = 5
-								
-							elseif (rng >= 0.0 and rng < 0.25) then
-								
+											   
+							
+													   
+														
+														   
+															
+																																 
+						
+		
+											  
+		
 							if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
 								-- Jungle Plain Hill
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									TerrainBuilder.SetFeatureType(target_plot_1,2);
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Jungle Plain Hill");
-									placed_yield = 5
-								else
-									-- Hill with Sheep
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Sheep Plain Hill");
-									placed_yield = 5
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,2);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Jungle Plain Hill");
+                        placed_yield = 5
+                     else
+                        -- Hill with Sheep
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Sheep Plain Hill");
+                        placed_yield = 5
 							end
 						end						
 							
 						elseif target_yield > 4.25 then -- yield < 4.75
 							
 							-- Banana Jungle Hill
-						if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
-								TerrainBuilder.SetTerrainType(target_plot_1,3);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1,0, 1);
-								TerrainBuilder.SetFeatureType(target_plot_1,2);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 3/1 Jungle Plain with Banana");
-								placed_yield = 4.5
-							else
-								-- Forested Plain Hill
-								TerrainBuilder.SetTerrainType(target_plot_1,3);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								TerrainBuilder.SetFeatureType(target_plot_1,3);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 4, 1);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Forested Plain with Deer");
-								placed_yield = 5
-						end
-						
-						else
-						
+                     if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
+                        TerrainBuilder.SetTerrainType(target_plot_1,3);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1,0, 1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,2);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 3/1 Jungle Plain with Banana");
+                        placed_yield = 4.5
+                     else
+                     
+                        if (rng >= 0.50) then
+                           -- Forested Plain with deers
+                           TerrainBuilder.SetTerrainType(target_plot_1,3);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           TerrainBuilder.SetFeatureType(target_plot_1,3);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           ResourceBuilder.SetResourceType(target_plot_1, 4, 1);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/3 Forested Plain with Deer");
+                           placed_yield = 4
+                        else
+                           -- Forested Plain hill
+                           TerrainBuilder.SetTerrainType(target_plot_1,4);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           TerrainBuilder.SetFeatureType(target_plot_1,3);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/3 Forested Plain Hill");
+                           placed_yield = 4
+                        end
 
-						-- Forested Plain Hill
-						TerrainBuilder.SetTerrainType(target_plot_1,4);
-						TerrainBuilder.SetFeatureType(target_plot_1,-1);
-						ResourceBuilder.SetResourceType(target_plot_1, -1);
-						__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/2 Plain Hills");
-						placed_yield = 3
+                     end
+						
+						elseif target_yield > 3.75 then
+                  
+                     if (rng >= 0.50) then
+                        -- Forested Plain with deers
+                        TerrainBuilder.SetTerrainType(target_plot_1,3);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,3);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 4, 1);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/3 Forested Plain with Deer");
+                        placed_yield = 4
+                     else
+                        -- Forested Plain hill
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,3);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/3 Forested Plain Hill");
+                        placed_yield = 4
+                     end
+
+                  else
+                     -- Plain Hill
+                     TerrainBuilder.SetTerrainType(target_plot_1,4);
+                     TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                     ResourceBuilder.SetResourceType(target_plot_1, -1);
+                     __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/2 Plain Hills");
+                     placed_yield = 3
 
 
 							
@@ -4342,6 +4591,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 					placed_yield = 3	
 						
 				end
+
 
 				-- Desert
 				elseif ( target_plot_1:GetTerrainType() == 6 or target_plot_1:GetTerrainType() == 7 or (target_plot_1:GetTerrainType() == 8 and flag ~= 3 and target_plot_1:GetFeatureType() ~= g_FEATURE_VOLCANO)) then
@@ -4477,7 +4727,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 					
 					if (target_yield < 5.75 and target_yield > 4.75) then
 							
-						if (rng >= 0.75) then
+						if (rng >= 0.70) then
 							-- Flat Deer Forest
 							TerrainBuilder.SetTerrainType(target_plot_1,0);
 							TerrainBuilder.SetFeatureType(target_plot_1,-1);
@@ -4487,7 +4737,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Grassland Forest with Deers");
 							placed_yield = 5
 							
-							elseif (rng >= 0.45 and rng < 0.75) then
+							elseif (rng >= 0.45 and rng < 0.70) then
 							-- Forested Hill
 							TerrainBuilder.SetTerrainType(target_plot_1,1);
 							TerrainBuilder.SetFeatureType(target_plot_1,-1);
@@ -4496,7 +4746,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Forested Grassland Hill");
 							placed_yield = 5
 							
-							elseif (rng >= 0.15 and rng < 0.45) then
+							else
 							-- Stone Hill
 							TerrainBuilder.SetTerrainType(target_plot_1,1);
 							TerrainBuilder.SetFeatureType(target_plot_1,-1);
@@ -4504,28 +4754,37 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 							ResourceBuilder.SetResourceType(target_plot_1, 8, 1)
 							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Stone Grassland Hill");
 							placed_yield = 5
-							
-							elseif (rng >= 0.0 and rng < 0.15) then
-							-- Copper Hill
-							TerrainBuilder.SetTerrainType(target_plot_1,1);
-							TerrainBuilder.SetFeatureType(target_plot_1,-1);
-							ResourceBuilder.SetResourceType(target_plot_1, -1);
-							ResourceBuilder.SetResourceType(target_plot_1, 2, 1)
-							__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/1/2 Copper Grassland Hill");
-							placed_yield = 5
-							
+	
 						end
 
-						else -- yield below 4.75
+               elseif target_yield > 4.25 then -- yield between 4.75 and 4.25
 						
-						-- Hill with Sheep
+                  if (rng >= 0.0 and rng < 0.80) then
+                     -- Hill with Sheep
+                     TerrainBuilder.SetTerrainType(target_plot_1,1);
+                     TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                     ResourceBuilder.SetResourceType(target_plot_1, -1);
+                     ResourceBuilder.SetResourceType(target_plot_1, 7, 1)
+                     __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 3/1 Sheep Grassland Hill");
+                     placed_yield = 4.5
+                  
+                  else
+                     -- Copper Hill
+                     TerrainBuilder.SetTerrainType(target_plot_1,1);
+                     TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                     ResourceBuilder.SetResourceType(target_plot_1, -1);
+                     ResourceBuilder.SetResourceType(target_plot_1, 2, 1)
+                     __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/1/2 Copper Grassland Hill");
+                     placed_yield = 4
+                  end
+						
+               else --below 4.25
+						
 						TerrainBuilder.SetTerrainType(target_plot_1,1);
 						TerrainBuilder.SetFeatureType(target_plot_1,-1);
 						ResourceBuilder.SetResourceType(target_plot_1, -1);
-						ResourceBuilder.SetResourceType(target_plot_1, 7, 1)
-						__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 3/1 Sheep Grassland Hill");
-						placed_yield = 4.5
-
+						__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/1 Grassland Hill");
+						placed_yield = 3.5						
 					end -- close target if
 						
 					else -- Grassland with Floodplains
@@ -4538,8 +4797,8 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 					end
 					
 				end
-				
-				-- Plains
+
+	-- Plains
 				elseif ( target_plot_1:GetTerrainType() == 3 or target_plot_1:GetTerrainType() == 4 or (target_plot_1:GetTerrainType() == 5 and flag ~= 3 and target_plot_1:GetFeatureType() ~= g_FEATURE_VOLCANO)) then
 					
 				if ( target_plot_1:GetFeatureType() ~= g_FEATURE_FLOODPLAINS_PLAINS or ( target_plot_1:GetFeatureType() == g_FEATURE_FLOODPLAINS_PLAINS and flag ~= 4) ) then
@@ -4548,7 +4807,7 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 					
 					if (target_yield < 5.25 and target_yield > 4.75) then
 							
-						if (rng >= 0.75) then
+						if (rng >= 0.50) then
 								-- Hill with Sheep
 								TerrainBuilder.SetTerrainType(target_plot_1,4);
 								TerrainBuilder.SetFeatureType(target_plot_1,-1);
@@ -4556,58 +4815,100 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 								ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
 								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Sheep Plain Hill");
 								placed_yield = 5
-								
-							elseif (rng >= 0.25 and rng < 0.75) then
-								-- Copper Plain Hill
-								TerrainBuilder.SetTerrainType(target_plot_1,4);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 2, 1)
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/2/2 Copper Plain Hill");
-								placed_yield = 5
-								
-							elseif (rng >= 0.0 and rng < 0.25) then
+
+                  else
+							
+													   
+														
+														   
+															
+																																 
+						
+		
+											  
 								
 							if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
 								-- Jungle Plain Hill
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									TerrainBuilder.SetFeatureType(target_plot_1,2);
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Jungle Plain Hill");
-									placed_yield = 5
-								else
-									-- Hill with Sheep
-									TerrainBuilder.SetTerrainType(target_plot_1,4);
-									TerrainBuilder.SetFeatureType(target_plot_1,-1);
-									ResourceBuilder.SetResourceType(target_plot_1, -1);
-									ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
-									__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Sheep Plain Hill");
-									placed_yield = 5
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,2);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Jungle Plain Hill");
+                        placed_yield = 5
+                     else
+                        -- Hill with Sheep
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 7, 1);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Sheep Plain Hill");
+                        placed_yield = 5
 							end
 						end						
 							
-						else -- yield < 4.75
+						elseif target_yield > 4.25 then -- yield < 4.75
 							
 							-- Banana Jungle Hill
-						if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
-								TerrainBuilder.SetTerrainType(target_plot_1,3);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1,0, 1);
-								TerrainBuilder.SetFeatureType(target_plot_1,2);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 3/1 Jungle Plain with Banana");
-								placed_yield = 4.5
-							else
-								-- Forested Plain Hill
-								TerrainBuilder.SetTerrainType(target_plot_1,3);
-								TerrainBuilder.SetFeatureType(target_plot_1,-1);
-								TerrainBuilder.SetFeatureType(target_plot_1,3);
-								ResourceBuilder.SetResourceType(target_plot_1, -1);
-								ResourceBuilder.SetResourceType(target_plot_1, 4, 1);
-								__Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 2/2 Forested Plain with Deer");
-								placed_yield = 5
-						end
+                     if (target_plot_1:GetY() > gridHeight * 0.33 and target_plot_1:GetY() < gridHeight * 0.66) then
+                        TerrainBuilder.SetTerrainType(target_plot_1,3);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1,0, 1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,2);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 3/1 Jungle Plain with Banana");
+                        placed_yield = 4.5
+                     else
+                     
+                        if (rng >= 0.50) then
+                           -- Forested Plain with deers
+                           TerrainBuilder.SetTerrainType(target_plot_1,3);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           TerrainBuilder.SetFeatureType(target_plot_1,3);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           ResourceBuilder.SetResourceType(target_plot_1, 4, 1);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/3 Forested Plain with Deer");
+                           placed_yield = 4
+                        else
+                           -- Forested Plain hill
+                           TerrainBuilder.SetTerrainType(target_plot_1,4);
+                           TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                           TerrainBuilder.SetFeatureType(target_plot_1,3);
+                           ResourceBuilder.SetResourceType(target_plot_1, -1);
+                           __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/3 Forested Plain Hill");
+                           placed_yield = 4
+                        end
+
+                     end
+						
+						elseif target_yield > 3.75 then
+                  
+                     if (rng >= 0.50) then
+                        -- Forested Plain with deers
+                        TerrainBuilder.SetTerrainType(target_plot_1,3);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,3);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        ResourceBuilder.SetResourceType(target_plot_1, 4, 1);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/3 Forested Plain with Deer");
+                        placed_yield = 4
+                     else
+                        -- Forested Plain hill
+                        TerrainBuilder.SetTerrainType(target_plot_1,4);
+                        TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                        TerrainBuilder.SetFeatureType(target_plot_1,3);
+                        ResourceBuilder.SetResourceType(target_plot_1, -1);
+                        __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/3 Forested Plain Hill");
+                        placed_yield = 4
+                     end
+
+                  else
+                     -- Plain Hill
+                     TerrainBuilder.SetTerrainType(target_plot_1,4);
+                     TerrainBuilder.SetFeatureType(target_plot_1,-1);
+                     ResourceBuilder.SetResourceType(target_plot_1, -1);
+                     __Debug("Terraforming Best X: ", target_plot_1:GetX(), "Y: ", target_plot_1:GetY(), "Nerfed to 1/2 Plain Hills");
+                     placed_yield = 3
+
 
 							
 					end -- close target
@@ -4622,7 +4923,6 @@ function Terraforming_Best(plot, missing_amount, best_1ring, best_2ring, avg_rin
 					placed_yield = 3	
 						
 				end
-
 				-- Desert
 				elseif ( target_plot_1:GetTerrainType() == 6 or target_plot_1:GetTerrainType() == 7 or (target_plot_1:GetTerrainType() == 8 and flag ~= 3 and target_plot_1:GetFeatureType() ~= g_FEATURE_VOLCANO)) then
 					
@@ -4772,7 +5072,7 @@ function Terraforming_Water(plot,civilizationType)
 		adjacentPlot = GetAdjacentTiles(plot, i);
 
 		if (adjacentPlot ~=nil) then
-			if (adjacentPlot:GetResourceCount() < 1 and adjacentPlot:IsUnit() == false) then
+			if (adjacentPlot:GetResourceCount() < 1 and adjacentPlot:IsUnit() == false and adjacentPlot:IsCoastalLand() == false) then
 				__Debug("Terraforming Water X: ", adjacentPlot:GetX(), "Y: ", adjacentPlot:GetY(), "Added: Water Lake");
 				TerrainBuilder.SetFeatureType(adjacentPlot,-1);
 				TerrainBuilder.SetTerrainType(adjacentPlot, 15);
@@ -4786,7 +5086,7 @@ function Terraforming_Water(plot,civilizationType)
 		adjacentPlot = GetAdjacentTiles(plot, i);
 
 		if (adjacentPlot ~=nil) then
-			if (adjacentPlot:GetResourceCount() < 1) then
+			if (adjacentPlot:GetResourceCount() < 1 and adjacentPlot:IsCoastalLand() == false) then
 				__Debug("Terraforming Water X: ", adjacentPlot:GetX(), "Y: ", adjacentPlot:GetY(), "Added: Water Lake but unit was on the way");
 				TerrainBuilder.SetFeatureType(adjacentPlot,-1);
 				TerrainBuilder.SetTerrainType(adjacentPlot, 15);
@@ -4800,11 +5100,13 @@ function Terraforming_Water(plot,civilizationType)
 		adjacentPlot = GetAdjacentTiles(plot, i);
 
 		if (adjacentPlot ~=nil) then
+			  if (adjacentPlot:IsCoastalLand() == false) then																																
 			__Debug("Terraforming Water X: ", adjacentPlot:GetX(), "Y: ", adjacentPlot:GetY(), "Added: Water Lake but unit was on the way");
 			ResourceBuilder.SetResourceType(adjacentPlot, -1);
 			TerrainBuilder.SetFeatureType(adjacentPlot,-1);
 			TerrainBuilder.SetTerrainType(adjacentPlot, 15);
 			return
+	         end 
 		end
 
 	end
