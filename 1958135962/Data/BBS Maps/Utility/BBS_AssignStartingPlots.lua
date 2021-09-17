@@ -26,7 +26,7 @@ local g_negative_bias = {}
 local g_custom_bias = {}
 local g_evaluated_plots = {}
 local g_large_islands = {}
-local Major_Distance_Target = 16
+local Major_Distance_Target = 12
 local Base_Major_Distance_Target = 16
 local Minor_Distance_Target = 0
 local bMinDistance = false
@@ -92,8 +92,110 @@ function BBS_AssignStartingPlots.Create(args)
 	print("Calculating Island Size: End", os.date("%c"));
 	end
    
+   -- Setting minimal distance between players
+   -- It will be based on the map used and the ratio size/players (more space if map too big, less space if too small)
+   -- Objective is to avoid as much as possible the use of the firaxis placement
+   
    ___Debug("Map Script: ", MapConfiguration.GetValue("MAP_SCRIPT"));
-	local instance = {}
+   
+   
+   -- Phase 1: Set base minimal distance according to the map.
+   -- Large maps, with low amount of water (ex: highlands, lakes, ...) will see players spawn with a higher distance from each other.
+   -- Smaller maps, with high amount of water (ex: Terra, Fractal, ...) will see player spawn closer to each other.
+   
+   local mapScript = MapConfiguration.GetValue("MAP_SCRIPT");
+   
+   if mapScript == "Highlands_XP2.lua" or mapScript == "Lakes.lua" then
+		Major_Distance_Target = 15
+	end
+   
+   if mapScript == "InlandSea.lua" then
+		Major_Distance_Target = 14
+	end
+
+   
+   if mapScript == "Seven_Seas.lua" or mapScript == "Primordial.lua" then
+		Major_Distance_Target = 13
+	end
+   
+	if mapScript == "Pangaea.lua" or mapScript == "DWPangaea.lua" or mapScript == "Shuffle.lua" or mapScript == "Tilted_Axis.lua" then
+		Major_Distance_Target = 12
+	end
+
+
+   if mapScript == "Fractal.lua" or mapScript == "Island_Plates.lua" or mapScript == "Small_Continents.lua"
+      or mapScript == "Archipelago_XP2.lua"  or mapScript == "Continents.lua" or mapScript == "Wetlands_XP2.lua"
+      or mapScript == "Continents_Islands.lua" or mapScript == "Continents_Islands.lua" or mapScript == "Splintered_Fractal.lua"
+      or mapScript == "DWArchipelago.lua" or mapScript == "DWFractal.lua" or mapScript == "DWMixedLand.lua"
+      or mapScript == "DWSmallContinents.lua" or mapScript == "DWMixedIslands.lua" then
+		Major_Distance_Target = 10
+	end
+
+   
+	
+	if mapScript == "Terra.lua" then
+		Major_Distance_Target = 8
+	end
+   
+   
+   --Phase 2 : Adapt distance if there are too many/not enough players on for the map size
+   
+   -- Enormous ?
+   if Map.GetMapSize() == 7 and  PlayerManager.GetAliveMajorsCount() > 17 then
+		Major_Distance_Target = Major_Distance_Target - 2
+	end
+	if Map.GetMapSize() == 7 and  PlayerManager.GetAliveMajorsCount() < 15 then
+		Major_Distance_Target = Major_Distance_Target + 2
+	end	
+   
+   -- Huge
+	if Map.GetMapSize() == 5 and  PlayerManager.GetAliveMajorsCount() > 13 then
+		Major_Distance_Target = Major_Distance_Target - 2
+	end
+	if Map.GetMapSize() == 5 and  PlayerManager.GetAliveMajorsCount() < 11 then
+		Major_Distance_Target = Major_Distance_Target + 2
+	end	
+	-- Large
+	if Map.GetMapSize() == 4 and  PlayerManager.GetAliveMajorsCount() > 11 then
+		Major_Distance_Target = Major_Distance_Target - 2
+	end
+	if Map.GetMapSize() == 4 and  PlayerManager.GetAliveMajorsCount() < 9 then
+		Major_Distance_Target = Major_Distance_Target + 2
+	end	
+	-- Standard
+	if Map.GetMapSize() == 3 and  PlayerManager.GetAliveMajorsCount() > 9 then
+		Major_Distance_Target = Major_Distance_Target - 2
+	end
+	if Map.GetMapSize() == 3 and  PlayerManager.GetAliveMajorsCount() < 7 then
+		Major_Distance_Target = Major_Distance_Target + 2
+	end	
+	-- Small
+	if Map.GetMapSize() == 2 and  PlayerManager.GetAliveMajorsCount() > 7 then
+		Major_Distance_Target = Major_Distance_Target - 2
+	end
+	if Map.GetMapSize() == 2 and  PlayerManager.GetAliveMajorsCount() < 5 then
+		Major_Distance_Target = Major_Distance_Target + 2
+	end	
+	
+   -- Tiny
+	if Map.GetMapSize() == 1 and  PlayerManager.GetAliveMajorsCount() > 5 then
+		Major_Distance_Target = Major_Distance_Target - 2
+	end
+	if Map.GetMapSize() == 1 and  PlayerManager.GetAliveMajorsCount() < 3 then
+		Major_Distance_Target = Major_Distance_Target + 2
+	end	
+	
+   -- Duel
+	if Map.GetMapSize() == 0 and  PlayerManager.GetAliveMajorsCount() > 2  then
+		Major_Distance_Target = Major_Distance_Target - 2
+	end	
+   
+   Base_Major_Distance_Target = Major_Distance_Target
+   
+   --[[
+   
+   ___Debug("Map Script: ", MapConfiguration.GetValue("MAP_SCRIPT"));
+	
    if MapConfiguration.GetValue("MAP_SCRIPT") == "Highlands_XP2.lua" then
 		Major_Distance_Target = 21
 	end
@@ -156,7 +258,12 @@ function BBS_AssignStartingPlots.Create(args)
 	end	
 	
 	Base_Major_Distance_Target = Major_Distance_Target
+   
+   
+   --]]
+   
 	Game:SetProperty("BBS_MAJOR_DISTANCE",Major_Distance_Target)
+   local instance = {}
 	instance  = {
         -- Core Process member methods
         __InitStartingData					= BBS_AssignStartingPlots.__InitStartingData,
